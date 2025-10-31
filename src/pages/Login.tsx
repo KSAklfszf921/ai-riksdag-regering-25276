@@ -158,8 +158,8 @@ const Login = () => {
             <TabsContent value="password" className="space-y-4">
               <form onSubmit={handleAuth} className="space-y-4">
                 {!isSignUp && (
-                  <div className="p-3 bg-blue-50 dark:bg-blue-950/20 border border-blue-200 dark:border-blue-800 rounded text-sm">
-                    <p className="text-blue-900 dark:text-blue-100">
+                  <div className="p-3 bg-info/10 border border-info/20 rounded text-sm">
+                    <p className="text-info-foreground">
                       <strong>Tips:</strong> Prova Magic Link om du har problem med lösenordsinloggning.
                     </p>
                   </div>

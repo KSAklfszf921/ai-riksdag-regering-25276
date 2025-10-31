@@ -10,7 +10,7 @@ const Regeringskansliet = () => {
     {
       title: "Rättsliga dokument",
       icon: Scale,
-      color: "text-purple-600",
+      variant: "warning" as const,
       items: [
         { title: "Propositioner", href: "/regeringskansliet/propositioner", description: "Lagförslag från regeringen" },
         { title: "Departementsserien (Ds)", href: "/regeringskansliet/departementsserien", description: "Utredningar från departementen" },
@@ -28,7 +28,7 @@ const Regeringskansliet = () => {
     {
       title: "Kommunikation",
       icon: Newspaper,
-      color: "text-blue-600",
+      variant: "info" as const,
       items: [
         { title: "Pressmeddelanden", href: "/regeringskansliet/pressmeddelanden", description: "Pressmeddelanden från regeringen" },
         { title: "Artiklar", href: "/regeringskansliet/artiklar", description: "Artiklar från regeringskansliet" },
@@ -40,7 +40,7 @@ const Regeringskansliet = () => {
     {
       title: "Internationellt",
       icon: Globe,
-      color: "text-green-600",
+      variant: "success" as const,
       items: [
         { title: "MR-granskningar", href: "/regeringskansliet/mr-granskningar", description: "Mänskliga rättigheter - granskningar" },
         { title: "Biståndsstrategier", href: "/regeringskansliet/bistands-strategier", description: "Strategier för utvecklingssamarbete" },
@@ -52,7 +52,7 @@ const Regeringskansliet = () => {
     {
       title: "Övrigt",
       icon: Folder,
-      color: "text-orange-600",
+      variant: "error" as const,
       items: [
         { title: "Dokument", href: "/regeringskansliet/dokument", description: "Alla dokument från regeringen.se" },
         { title: "Kategorier", href: "/regeringskansliet/kategorier", description: "Dokumentkategorier" },
@@ -67,7 +67,7 @@ const Regeringskansliet = () => {
 
   return (
     <div className="min-h-screen bg-background">
-      <div className="w-full bg-primary py-1"></div>
+      <div className="w-full bg-primary py-1" />
       
       <div className="container mx-auto px-4 py-12 md:py-20 max-w-7xl">
         <header className="text-center mb-16">
@@ -98,14 +98,14 @@ const Regeringskansliet = () => {
           {documentCategories.map((category) => (
             <div key={category.title}>
               <div className="flex items-center gap-3 mb-6">
-                <category.icon className={`h-6 w-6 ${category.color}`} />
+                <category.icon className={`h-6 w-6 ${category.variant === 'info' ? 'text-info' : category.variant === 'success' ? 'text-success' : category.variant === 'warning' ? 'text-warning' : 'text-error'}`} />
                 <h2 className="text-2xl font-bold">{category.title}</h2>
               </div>
               
               <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
                 {category.items.map((item) => (
                   <Link key={item.href} to={item.href}>
-                    <Card className="h-full transition-all hover:shadow-lg hover:scale-105 cursor-pointer">
+                    <Card className="h-full transition-all hover:shadow-lg hover:scale-[1.02] cursor-pointer border-2 hover:border-primary/20">
                       <CardHeader>
                         <CardTitle className="text-lg">{item.title}</CardTitle>
                         <CardDescription className="text-sm">

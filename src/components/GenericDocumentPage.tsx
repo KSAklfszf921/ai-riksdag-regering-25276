@@ -19,6 +19,8 @@ interface GenericDocumentPageProps {
   source: "riksdagen" | "regeringskansliet";
   backLink?: string;
   dataType?: string;
+  dateColumn?: string;
+  titleColumn?: string;
 }
 
 export const GenericDocumentPage = ({
@@ -28,6 +30,8 @@ export const GenericDocumentPage = ({
   source,
   backLink = source === "riksdagen" ? "/riksdagen" : "/regeringskansliet",
   dataType,
+  dateColumn = "publicerad_datum",
+  titleColumn = "titel",
 }: GenericDocumentPageProps) => {
   const [searchQuery, setSearchQuery] = useState("");
   const [sortBy, setSortBy] = useState("datum");
@@ -41,8 +45,8 @@ export const GenericDocumentPage = ({
         query = query.or(`titel.ilike.%${searchQuery}%,document_id.ilike.%${searchQuery}%,beteckningsnummer.ilike.%${searchQuery}%`);
       }
 
-      const sortColumn = sortBy === "datum" ? "publicerad_datum" : "titel";
-      query = query.order(sortColumn, { ascending: false, nullsFirst: false });
+      const sortColumn = sortBy === "datum" ? dateColumn : titleColumn;
+      query = query.order(sortColumn, { ascending: sortBy === "datum" ? false : true, nullsFirst: false });
 
       const { data, error } = await query;
       if (error) throw error;

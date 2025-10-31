@@ -57,7 +57,14 @@ export const AdminSetup = () => {
   };
 
   const makeSelfAdmin = async () => {
-    if (!currentUser) return;
+    if (!currentUser) {
+      toast({
+        title: "Inte inloggad",
+        description: "Du måste logga in först",
+        variant: "destructive",
+      });
+      return;
+    }
     await makeAdmin(currentUser.id);
   };
 
@@ -74,19 +81,25 @@ export const AdminSetup = () => {
       </CardHeader>
       <CardContent className="space-y-4">
         {!currentUser && (
-          <div className="p-4 border rounded bg-amber-50 dark:bg-amber-950/20">
-            <p className="text-sm text-amber-900 dark:text-amber-100 mb-2">
-              <strong>Första gången?</strong> Logga in först för att kunna ge dig själv admin-rättigheter.
+          <div className="p-4 border rounded bg-red-50 dark:bg-red-950/20 border-red-200 dark:border-red-800">
+            <p className="text-sm text-red-900 dark:text-red-100 mb-2">
+              <strong>⚠️ Du är inte inloggad!</strong>
+            </p>
+            <p className="text-xs text-red-700 dark:text-red-300">
+              Gå till startsidan och klicka på "Logga in" först. Använd Magic Link för enklast inloggning.
             </p>
           </div>
         )}
 
         {currentUser && (
-          <div className="p-4 border rounded bg-muted/50">
-            <p className="text-sm mb-2">
-              Inloggad som: <strong>{currentUser.email}</strong>
+          <div className="p-4 border rounded bg-green-50 dark:bg-green-950/20 border-green-200 dark:border-green-800">
+            <p className="text-sm mb-2 text-green-900 dark:text-green-100">
+              ✅ Inloggad som: <strong>{currentUser.email}</strong>
             </p>
-            <Button onClick={makeSelfAdmin} size="sm" variant="outline">
+            <p className="text-xs mb-3 text-green-700 dark:text-green-300">
+              Klicka nedan för att ge dig själv admin-rättigheter (första användaren kan alltid bli admin)
+            </p>
+            <Button onClick={makeSelfAdmin} size="sm">
               <UserPlus className="h-4 w-4 mr-2" />
               Ge mig admin-rättigheter
             </Button>

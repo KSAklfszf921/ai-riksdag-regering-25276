@@ -4,18 +4,22 @@ import regeringskanslientLogo from "@/assets/regeringskansliet-logo.svg";
 
 const Index = () => {
   return (
-    <div className="min-h-screen bg-gradient-to-br from-background via-background to-muted">
-      <div className="container mx-auto px-4 py-16 md:py-24">
-        <header className="text-center mb-16 space-y-4">
-          <h1 className="text-4xl md:text-6xl font-bold text-foreground tracking-tight">
+    <div className="min-h-screen bg-background">
+      {/* Header bar */}
+      <div className="w-full bg-primary py-1"></div>
+      
+      <div className="container mx-auto px-4 py-12 md:py-20 max-w-6xl">
+        <header className="text-center mb-16 md:mb-20">
+          <h1 className="text-4xl md:text-5xl lg:text-6xl font-serif font-bold text-foreground mb-4 tracking-tight">
             Svenska AI-tjänster
           </h1>
-          <p className="text-xl text-muted-foreground max-w-2xl mx-auto">
-            Välj den institution du vill utforska med hjälp av artificiell intelligens
+          <div className="w-20 h-1 bg-secondary mx-auto mb-6"></div>
+          <p className="text-lg md:text-xl text-muted-foreground max-w-3xl mx-auto leading-relaxed">
+            Välkommen till den officiella portalen för AI-baserad information om svenska politiska institutioner
           </p>
         </header>
 
-        <div className="grid md:grid-cols-2 gap-8 max-w-5xl mx-auto">
+        <div className="grid md:grid-cols-2 gap-6 md:gap-8 max-w-5xl mx-auto mb-16">
           <InstitutionCard
             title="Riksdagen"
             description="Utforska Sveriges riksdag med AI. Få insikter om propositioner, debatter och beslutsprocesser."
@@ -31,8 +35,15 @@ const Index = () => {
           />
         </div>
 
-        <footer className="text-center mt-20 text-sm text-muted-foreground">
-          <p>AI-baserade informationstjänster för svenska politiska institutioner</p>
+        <footer className="border-t border-border pt-8 mt-12">
+          <div className="text-center space-y-3">
+            <p className="text-sm text-muted-foreground">
+              AI-baserade informationstjänster för svenska politiska institutioner
+            </p>
+            <p className="text-xs text-muted-foreground">
+              Denna tjänst tillhandahålls i informationssyfte och är inte en officiell myndighetstjänst
+            </p>
+          </div>
         </footer>
       </div>
     </div>

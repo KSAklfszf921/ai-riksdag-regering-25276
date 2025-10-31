@@ -23,6 +23,39 @@ interface DokumentData {
   dokument_url_html?: string;
 }
 
+interface LedamotData {
+  intressent_id: string;
+  fornamn?: string;
+  efternamn?: string;
+  tilltalsnamn?: string;
+  parti?: string;
+  valkrets?: string;
+  status?: string;
+  bild_url?: string;
+}
+
+interface AnforandeData {
+  anforande_id: string;
+  intressent_id?: string;
+  dok_id?: string;
+  debattnamn?: string;
+  debattsekund?: number;
+  anftext?: string;
+  anfdatum?: string;
+  avsnittsrubrik?: string;
+  parti?: string;
+  talare?: string;
+}
+
+interface VoteringData {
+  votering_id: string;
+  rm?: string;
+  beteckning?: string;
+  punkt?: number;
+  titel?: string;
+  votering_datum?: string;
+}
+
 Deno.serve(async (req) => {
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders });
@@ -34,7 +67,7 @@ Deno.serve(async (req) => {
       Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
     )
 
-    const { dataType, limit = 50 } = await req.json();
+    const { dataType, limit = 50, filters = {} } = await req.json();
 
     console.log(`Hämtar ${dataType} data från Riksdagens API...`);
 
@@ -42,19 +75,17 @@ Deno.serve(async (req) => {
     let tableName = '';
 
     if (dataType === 'dokument') {
-      // Hämta senaste dokumenten
       apiUrl = `https://data.riksdagen.se/dokumentlista/?sok=&doktyp=&rm=&ts=&bet=&tempbet=&nr=&org=&iid=&webbtv=&talare=&exakt=&planering=&facets=&sort=datum&sortorder=desc&rapport=&utformat=json&a=s&p=1&sz=${limit}`;
       tableName = 'riksdagen_dokument';
     } else if (dataType === 'ledamoter') {
-      // Riksdagens API har inte ett direkt ledamöter-endpoint, men vi kan hämta från en annan källa
-      // För nu returnerar vi ett exempel
-      return new Response(
-        JSON.stringify({ 
-          success: false, 
-          message: 'Ledamöter API kommer snart. Använd dokument först.' 
-        }),
-        { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-      );
+      apiUrl = `https://data.riksdagen.se/personlista/?utformat=json&rdlstatus=samtliga`;
+      tableName = 'riksdagen_ledamoter';
+    } else if (dataType === 'anforanden') {
+      apiUrl = `https://data.riksdagen.se/anforandelist/?utformat=json&sz=${limit}&sort=datum&sortorder=desc`;
+      tableName = 'riksdagen_anforanden';
+    } else if (dataType === 'voteringar') {
+      apiUrl = `https://data.riksdagen.se/voteringlista/?utformat=json&sz=${limit}&sort=datum&sortorder=desc`;
+      tableName = 'riksdagen_voteringar';
     } else {
       return new Response(
         JSON.stringify({ success: false, message: 'Okänd datatyp' }),
@@ -112,6 +143,105 @@ Deno.serve(async (req) => {
           }
         } catch (err) {
           console.error('Fel vid bearbetning av dokument:', err);
+          errors++;
+        }
+      }
+    } else if (dataType === 'ledamoter' && data.personlista?.person) {
+      const personer = Array.isArray(data.personlista.person) 
+        ? data.personlista.person 
+        : [data.personlista.person];
+
+      for (const person of personer) {
+        try {
+          const ledamotData: LedamotData = {
+            intressent_id: person.intressent_id,
+            fornamn: person.fornamn,
+            efternamn: person.efternamn,
+            tilltalsnamn: person.tilltalsnamn,
+            parti: person.parti,
+            valkrets: person.valkrets,
+            status: person.status,
+            bild_url: person.bild_url_192 || person.bild_url_80,
+          };
+
+          const { error } = await supabaseClient
+            .from(tableName)
+            .upsert(ledamotData, { onConflict: 'intressent_id' });
+
+          if (error) {
+            console.error('Fel vid insättning av ledamot:', error);
+            errors++;
+          } else {
+            insertedCount++;
+          }
+        } catch (err) {
+          console.error('Fel vid bearbetning av ledamot:', err);
+          errors++;
+        }
+      }
+    } else if (dataType === 'anforanden' && data.anforandelist?.anforande) {
+      const anforanden = Array.isArray(data.anforandelist.anforande) 
+        ? data.anforandelist.anforande 
+        : [data.anforandelist.anforande];
+
+      for (const anf of anforanden) {
+        try {
+          const anforandeData: AnforandeData = {
+            anforande_id: anf.anforande_id,
+            intressent_id: anf.intressent_id,
+            dok_id: anf.dok_id,
+            debattnamn: anf.debattnamn,
+            debattsekund: anf.debattsekund ? parseInt(anf.debattsekund) : undefined,
+            anftext: anf.anforandetext,
+            anfdatum: anf.datum,
+            avsnittsrubrik: anf.avsnittsrubrik,
+            parti: anf.parti,
+            talare: anf.talare,
+          };
+
+          const { error } = await supabaseClient
+            .from(tableName)
+            .upsert(anforandeData, { onConflict: 'anforande_id' });
+
+          if (error) {
+            console.error('Fel vid insättning av anförande:', error);
+            errors++;
+          } else {
+            insertedCount++;
+          }
+        } catch (err) {
+          console.error('Fel vid bearbetning av anförande:', err);
+          errors++;
+        }
+      }
+    } else if (dataType === 'voteringar' && data.voteringlista?.votering) {
+      const voteringar = Array.isArray(data.voteringlista.votering) 
+        ? data.voteringlista.votering 
+        : [data.voteringlista.votering];
+
+      for (const vot of voteringar) {
+        try {
+          const voteringData: VoteringData = {
+            votering_id: vot.votering_id,
+            rm: vot.rm,
+            beteckning: vot.beteckning,
+            punkt: vot.punkt ? parseInt(vot.punkt) : undefined,
+            titel: vot.titel,
+            votering_datum: vot.datum,
+          };
+
+          const { error } = await supabaseClient
+            .from(tableName)
+            .upsert(voteringData, { onConflict: 'votering_id' });
+
+          if (error) {
+            console.error('Fel vid insättning av votering:', error);
+            errors++;
+          } else {
+            insertedCount++;
+          }
+        } catch (err) {
+          console.error('Fel vid bearbetning av votering:', err);
           errors++;
         }
       }

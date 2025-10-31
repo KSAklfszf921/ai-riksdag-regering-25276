@@ -14,6 +14,54 @@ export type Database = {
   }
   public: {
     Tables: {
+      riksdagen_anforanden: {
+        Row: {
+          anfdatum: string | null
+          anforande_id: string
+          anftext: string | null
+          avsnittsrubrik: string | null
+          created_at: string
+          debattnamn: string | null
+          debattsekund: number | null
+          dok_id: string | null
+          id: string
+          intressent_id: string | null
+          parti: string | null
+          talare: string | null
+          updated_at: string
+        }
+        Insert: {
+          anfdatum?: string | null
+          anforande_id: string
+          anftext?: string | null
+          avsnittsrubrik?: string | null
+          created_at?: string
+          debattnamn?: string | null
+          debattsekund?: number | null
+          dok_id?: string | null
+          id?: string
+          intressent_id?: string | null
+          parti?: string | null
+          talare?: string | null
+          updated_at?: string
+        }
+        Update: {
+          anfdatum?: string | null
+          anforande_id?: string
+          anftext?: string | null
+          avsnittsrubrik?: string | null
+          created_at?: string
+          debattnamn?: string | null
+          debattsekund?: number | null
+          dok_id?: string | null
+          id?: string
+          intressent_id?: string | null
+          parti?: string | null
+          talare?: string | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
       riksdagen_api_log: {
         Row: {
           antal_poster: number | null
@@ -143,6 +191,102 @@ export type Database = {
           tilltalsnamn?: string | null
           updated_at?: string
           valkrets?: string | null
+        }
+        Relationships: []
+      }
+      riksdagen_utskott: {
+        Row: {
+          beskrivning: string | null
+          created_at: string
+          id: string
+          namn: string | null
+          updated_at: string
+          utskott_kod: string
+        }
+        Insert: {
+          beskrivning?: string | null
+          created_at?: string
+          id?: string
+          namn?: string | null
+          updated_at?: string
+          utskott_kod: string
+        }
+        Update: {
+          beskrivning?: string | null
+          created_at?: string
+          id?: string
+          namn?: string | null
+          updated_at?: string
+          utskott_kod?: string
+        }
+        Relationships: []
+      }
+      riksdagen_votering_ledamoter: {
+        Row: {
+          created_at: string
+          id: string
+          intressent_id: string | null
+          parti: string | null
+          rost: string | null
+          votering_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          intressent_id?: string | null
+          parti?: string | null
+          rost?: string | null
+          votering_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          intressent_id?: string | null
+          parti?: string | null
+          rost?: string | null
+          votering_id?: string
+        }
+        Relationships: []
+      }
+      riksdagen_voteringar: {
+        Row: {
+          beteckning: string | null
+          created_at: string
+          id: string
+          punkt: number | null
+          rm: string | null
+          titel: string | null
+          updated_at: string
+          vinnare: string | null
+          votering_datum: string | null
+          votering_id: string
+          votering_typ: string | null
+        }
+        Insert: {
+          beteckning?: string | null
+          created_at?: string
+          id?: string
+          punkt?: number | null
+          rm?: string | null
+          titel?: string | null
+          updated_at?: string
+          vinnare?: string | null
+          votering_datum?: string | null
+          votering_id: string
+          votering_typ?: string | null
+        }
+        Update: {
+          beteckning?: string | null
+          created_at?: string
+          id?: string
+          punkt?: number | null
+          rm?: string | null
+          titel?: string | null
+          updated_at?: string
+          vinnare?: string | null
+          votering_datum?: string | null
+          votering_id?: string
+          votering_typ?: string | null
         }
         Relationships: []
       }

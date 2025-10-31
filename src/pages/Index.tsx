@@ -1,11 +1,12 @@
 import { Link } from "react-router-dom";
 import { InstitutionCard } from "@/components/InstitutionCard";
 import { Button } from "@/components/ui/button";
-import { Shield, LogIn, LogOut } from "lucide-react";
+import { Shield, LogIn, LogOut, Heart } from "lucide-react";
 import { useIsAdmin } from "@/hooks/useIsAdmin";
 import { supabase } from "@/integrations/supabase/client";
 import { useQuery } from "@tanstack/react-query";
 import { useToast } from "@/hooks/use-toast";
+import { ThemeToggle } from "@/components/ThemeToggle";
 import riksdagenLogo from "@/assets/riksdagen-logo.svg";
 import regeringskanslientLogo from "@/assets/regeringskansliet-logo.svg";
 
@@ -32,10 +33,22 @@ const Index = () => {
   return (
     <div className="min-h-screen bg-background">
       {/* Header bar */}
-      <div className="w-full bg-primary py-1"></div>
+      <div className="w-full bg-primary py-1 flex items-center justify-end px-4">
+        <ThemeToggle />
+      </div>
 
       <div className="container mx-auto px-4 py-12 md:py-20 max-w-6xl">
         <div className="flex justify-end gap-2 mb-4">
+          {/* Favorites button - show for logged in users */}
+          {user && (
+            <Link to="/favorites">
+              <Button variant="outline" size="sm">
+                <Heart className="h-4 w-4 mr-2" />
+                Favoriter
+              </Button>
+            </Link>
+          )}
+          
           {/* Admin button - show for logged in users */}
           {user && (
             <Link to="/admin">

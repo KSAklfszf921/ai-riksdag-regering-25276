@@ -5,7 +5,7 @@ import { Link } from "react-router-dom";
 import { Card, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Badge } from "@/components/ui/badge";
-import { Calendar, ExternalLink, Building2 } from "lucide-react";
+import { Calendar, ExternalLink, Building2, FileText } from "lucide-react";
 import { formatDistanceToNow } from "date-fns";
 import { sv } from "date-fns/locale";
 import EmptyState from "@/components/EmptyState";
@@ -20,8 +20,7 @@ const Pressmeddelanden = () => {
       const { data, error } = await supabase
         .from('regeringskansliet_pressmeddelanden')
         .select('*')
-        .order('publicerad_datum', { ascending: false })
-        .limit(100);
+        .order('publicerad_datum', { ascending: false });
       
       if (error) throw error;
       return data;
@@ -111,6 +110,25 @@ const Pressmeddelanden = () => {
                           </div>
                         )}
                       </div>
+                      {press.local_bilagor && Array.isArray(press.local_bilagor) && press.local_bilagor.length > 0 && (
+                        <div className="mt-3 pt-3 border-t">
+                          <p className="text-sm font-medium mb-2">Nedladdade bilagor:</p>
+                          <div className="flex flex-wrap gap-2">
+                            {press.local_bilagor.map((bilaga: any, idx: number) => (
+                              <a
+                                key={idx}
+                                href={bilaga.local_url}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="flex items-center gap-1 text-xs text-primary hover:underline"
+                              >
+                                <FileText className="h-3 w-3" />
+                                {bilaga.filename}
+                              </a>
+                            ))}
+                          </div>
+                        </div>
+                      )}
                     </div>
                     {press.url && (
                       <a

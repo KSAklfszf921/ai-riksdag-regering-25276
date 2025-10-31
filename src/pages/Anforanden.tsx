@@ -17,8 +17,7 @@ const Anforanden = () => {
       const { data, error } = await supabase
         .from('riksdagen_anforanden')
         .select('*')
-        .order('anfdatum', { ascending: false })
-        .limit(50);
+        .order('anfdatum', { ascending: false });
       
       if (error) throw error;
       return data;

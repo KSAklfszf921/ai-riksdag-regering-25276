@@ -16,8 +16,7 @@ const Voteringar = () => {
       const { data, error } = await supabase
         .from('riksdagen_voteringar')
         .select('*')
-        .order('votering_datum', { ascending: false })
-        .limit(50);
+        .order('votering_datum', { ascending: false });
       
       if (error) throw error;
       return data;

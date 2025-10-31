@@ -76,9 +76,6 @@ const DataFetchButton = ({ type = 'riksdagen' }: DataFetchButtonProps) => {
             <DropdownMenuItem onClick={() => fetchData('ledamoter')}>
               Hämta ledamöter
             </DropdownMenuItem>
-            <DropdownMenuItem onClick={() => fetchData('anforanden')}>
-              Hämta anföranden
-            </DropdownMenuItem>
             <DropdownMenuItem onClick={() => fetchData('voteringar')}>
               Hämta voteringar
             </DropdownMenuItem>

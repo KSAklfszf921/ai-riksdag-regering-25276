@@ -92,7 +92,10 @@ const Ledamoter = () => {
               <Card key={ledamot.id} className="hover:shadow-lg transition-shadow">
                 <CardHeader className="text-center">
                   <Avatar className="h-24 w-24 mx-auto mb-4">
-                    <AvatarImage src={ledamot.bild_url || undefined} alt={`${ledamot.fornamn} ${ledamot.efternamn}`} />
+                    <AvatarImage 
+                      src={ledamot.local_bild_url || ledamot.bild_url || undefined} 
+                      alt={`${ledamot.fornamn} ${ledamot.efternamn}`} 
+                    />
                     <AvatarFallback>
                       {ledamot.fornamn?.[0]}{ledamot.efternamn?.[0]}
                     </AvatarFallback>

@@ -5,6 +5,7 @@ import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import StatsCard from "@/components/StatsCard";
 import DataFetchButton from "@/components/DataFetchButton";
+import ProgressTracker from "@/components/ProgressTracker";
 import { Skeleton } from "@/components/ui/skeleton";
 
 const Riksdagen = () => {
@@ -84,6 +85,8 @@ const Riksdagen = () => {
         </header>
 
         {/* Statistics */}
+        <ProgressTracker source="riksdagen" />
+        
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-12">
           {statsLoading ? (
             <>

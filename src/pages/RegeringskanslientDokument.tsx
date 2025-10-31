@@ -20,8 +20,7 @@ const RegeringskanslientDokument = () => {
       const { data, error } = await supabase
         .from('regeringskansliet_dokument')
         .select('*')
-        .order('publicerad_datum', { ascending: false })
-        .limit(100);
+        .order('publicerad_datum', { ascending: false });
       
       if (error) throw error;
       return data;
@@ -120,6 +119,25 @@ const RegeringskanslientDokument = () => {
                           </div>
                         )}
                       </div>
+                      {dok.local_files && Array.isArray(dok.local_files) && dok.local_files.length > 0 && (
+                        <div className="mt-3 pt-3 border-t">
+                          <p className="text-sm font-medium mb-2">Nedladdade filer:</p>
+                          <div className="flex flex-wrap gap-2">
+                            {dok.local_files.map((file: any, idx: number) => (
+                              <a
+                                key={idx}
+                                href={file.local_url}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="flex items-center gap-1 text-xs text-primary hover:underline"
+                              >
+                                <FileText className="h-3 w-3" />
+                                {file.filename}
+                              </a>
+                            ))}
+                          </div>
+                        </div>
+                      )}
                     </div>
                     <div className="flex flex-col gap-2">
                       {dok.url && (

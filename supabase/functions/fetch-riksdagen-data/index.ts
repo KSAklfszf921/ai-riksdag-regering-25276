@@ -6,6 +6,17 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 }
 
+// Sanitize file paths to remove invalid characters for Supabase Storage
+function sanitizeStoragePath(path: string): string {
+  // Remove or replace invalid characters: : " * ? < > | and leading/trailing spaces
+  return path
+    .replace(/:/g, '-')  // Replace colons with hyphens
+    .replace(/["\*\?<>\|]/g, '_')  // Replace other invalid chars with underscores
+    .replace(/\s+/g, '-')  // Replace spaces with hyphens
+    .replace(/\/+/g, '/')  // Collapse multiple slashes
+    .replace(/^\/|\/$/g, '');  // Remove leading/trailing slashes
+}
+
 interface DokumentData {
   dok_id: string;
   rm?: string;
@@ -76,13 +87,13 @@ async function enqueueFileDownload(
       .insert({
         file_url: fileUrl,
         bucket,
-        storage_path: path,
+        storage_path: sanitizeStoragePath(path),  // Sanitize path before storing
         table_name: tableName,
         record_id: recordId,
         column_name: columnName,
         status: 'pending'
       });
-    console.log(`Fil tillagd i kö: ${path}`);
+    console.log(`Fil tillagd i kö: ${sanitizeStoragePath(path)}`);
   } catch (err) {
     console.error('Fel vid tillägg i filkö:', err);
   }
@@ -221,6 +232,10 @@ Deno.serve(async (req) => {
     let nextPageUrl: string | null = apiUrl;
     let totalPages = 0;
     let totalItems = 0;
+    
+    // Limit pages per execution to prevent resource exhaustion
+    const MAX_PAGES_PER_EXECUTION = 5;  // Process max 5 pages (1000 items) per execution
+    let pagesProcessedThisExecution = 0;
 
     // Helper function to fetch with retries
     const fetchWithRetry = async (url: string, maxRetries = 3): Promise<Response> => {
@@ -260,8 +275,8 @@ Deno.serve(async (req) => {
       throw new Error('Unexpected error in fetchWithRetry');
     };
 
-    // Hämta alla sidor om paginering är aktiverad
-    while (nextPageUrl && (maxPages === null || currentPage <= maxPages)) {
+    // Hämta sidor med begränsning för att undvika resursutmattning
+    while (nextPageUrl && (maxPages === null || currentPage <= maxPages) && pagesProcessedThisExecution < MAX_PAGES_PER_EXECUTION) {
       // Kontrollera stoppsignal
       if (await shouldStop(supabaseClient, dataType)) {
         console.log('Stoppsignal mottagen, avbryter hämtning');
@@ -272,7 +287,7 @@ Deno.serve(async (req) => {
         break;
       }
       
-      console.log(`Hämtar sida ${currentPage}...`);
+      console.log(`Hämtar sida ${currentPage}... (${pagesProcessedThisExecution + 1}/${MAX_PAGES_PER_EXECUTION} i denna körning)`);
       
       // Add delay between requests to avoid rate limiting (except first page)
       if (currentPage > 1) {
@@ -568,6 +583,7 @@ Deno.serve(async (req) => {
       });
 
       currentPage++;
+      pagesProcessedThisExecution++;  // Increment batch counter
 
       // Logga var 10:e sida
       if (currentPage % 10 === 0) {
@@ -579,24 +595,40 @@ Deno.serve(async (req) => {
         await new Promise(resolve => setTimeout(resolve, 100));
       }
     }
+    
+    // Check if we hit the batch limit and more pages remain
+    const hasMorePages = nextPageUrl !== null && pagesProcessedThisExecution >= MAX_PAGES_PER_EXECUTION;
+    const finalStatus = hasMorePages ? 'in_progress' : 'completed';
+    
+    // Update final progress
+    await updateProgress(supabaseClient, dataType, {
+      current_page: currentPage - 1,
+      items_fetched: totalInserted,
+      status: finalStatus
+    });
 
     // Logga API-anropet
     await supabaseClient.from('riksdagen_api_log').insert({
       endpoint: dataType,
-      status: 'success',
+      status: hasMorePages ? 'partial' : 'success',
       antal_poster: totalInserted,
       felmeddelande: totalErrors > 0 ? `${totalErrors} fel uppstod` : null,
     });
 
-    console.log(`Slutfört! Infogade ${totalInserted} poster över ${currentPage - 1} sidor, ${totalErrors} fel.`);
+    const completionMessage = hasMorePages 
+      ? `Bearbetade ${pagesProcessedThisExecution} sidor i denna batch. Fler sidor kvarstår. Anropa funktionen igen för att fortsätta.`
+      : `Hämtade och sparade ${totalInserted} ${dataType} över ${currentPage - 1} sidor`;
+    
+    console.log(`Batch slutfört! Infogade ${totalInserted} poster över ${pagesProcessedThisExecution} sidor, ${totalErrors} fel. Status: ${finalStatus}`);
 
     return new Response(
       JSON.stringify({ 
         success: true, 
         inserted: totalInserted,
         errors: totalErrors,
-        pages: currentPage - 1,
-        message: `Hämtade och sparade ${totalInserted} ${dataType} över ${currentPage - 1} sidor` 
+        pages: pagesProcessedThisExecution,
+        complete: !hasMorePages,
+        message: completionMessage
       }),
       { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     );

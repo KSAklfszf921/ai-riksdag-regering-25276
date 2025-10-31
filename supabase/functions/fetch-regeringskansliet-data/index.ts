@@ -5,6 +5,17 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 }
 
+// Sanitize file paths to remove invalid characters for Supabase Storage
+function sanitizeStoragePath(path: string): string {
+  // Remove or replace invalid characters: : " * ? < > | and leading/trailing spaces
+  return path
+    .replace(/:/g, '-')  // Replace colons with hyphens
+    .replace(/["\*\?<>\|]/g, '_')  // Replace other invalid chars with underscores
+    .replace(/\s+/g, '-')  // Replace spaces with hyphens
+    .replace(/\/+/g, '/')  // Collapse multiple slashes
+    .replace(/^\/|\/$/g, '');  // Remove leading/trailing slashes
+}
+
 // Lägg till fil i nedladdningskö istället för att ladda ner direkt
 async function enqueueFileDownload(
   supabaseClient: any,
@@ -27,13 +38,13 @@ async function enqueueFileDownload(
       .insert({
         file_url: fullUrl,
         bucket,
-        storage_path: path,
+        storage_path: sanitizeStoragePath(path),  // Sanitize path before storing
         table_name: tableName,
         record_id: recordId,
         column_name: columnName,
         status: 'pending'
       });
-    console.log(`Fil tillagd i kö: ${path}`);
+    console.log(`Fil tillagd i kö: ${sanitizeStoragePath(path)}`);
   } catch (err) {
     console.error('Fel vid tillägg i filkö:', err);
   }
@@ -241,7 +252,7 @@ Deno.serve(async (req) => {
     console.log('Data hämtad från g0v.se API');
 
     // Batching configuration to prevent resource exhaustion
-    const BATCH_SIZE = 100; // Process max 100 items per execution
+    const BATCH_SIZE = 25; // Process max 25 items per execution to avoid memory issues
     let insertedCount = 0;
     let errors = 0;
     let totalItems = 0;

@@ -164,18 +164,21 @@ Deno.serve(async (req) => {
       );
     }
 
-    const dataType = requestBody.dataType.trim();
-    if (dataType.length === 0 || dataType.length > 100) {
+    const rawDataType = requestBody.dataType.trim();
+    if (rawDataType.length === 0 || rawDataType.length > 100) {
       return new Response(
         JSON.stringify({ error: 'Invalid dataType length' }),
         { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     }
 
+    // Normalisera dataType - konvertera understreck till bindestreck för konsistens
+    const dataType = rawDataType.replace(/_/g, "-");
+
     const paginate = requestBody.paginate ?? true;
     const maxPages = requestBody.maxPages ?? null;
 
-    console.log(`Hämtar ${dataType} data från Riksdagens API (paginering: ${paginate})...`);
+    console.log(`Hämtar ${dataType} data från Riksdagens API (paginering: ${paginate}, original: ${rawDataType})...`);
 
     let apiUrl = '';
     let tableName = '';

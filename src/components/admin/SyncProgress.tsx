@@ -40,7 +40,10 @@ export const SyncProgress = ({ source }: SyncProgressProps) => {
           .from(table as any)
           .select("*", { count: "exact", head: true });
 
-        const dataType = table.replace(`${source}_`, "");
+        // Konvertera tabellnamn till dataType med bindestreck (konsistent med Edge Functions)
+        const dataType = table
+          .replace(`${source}_`, "")
+          .replace(/_/g, "-"); // Konvertera understreck till bindestreck
 
         await supabase
           .from("data_fetch_progress")

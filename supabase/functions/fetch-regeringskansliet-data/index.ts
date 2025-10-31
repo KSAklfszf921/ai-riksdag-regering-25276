@@ -115,15 +115,17 @@ Deno.serve(async (req) => {
       );
     }
 
-    const dataType = requestBody.dataType.trim();
-    if (dataType.length === 0 || dataType.length > 100) {
+    const rawDataType = requestBody.dataType.trim();
+    if (rawDataType.length === 0 || rawDataType.length > 100) {
       return new Response(
         JSON.stringify({ error: 'Invalid dataType length' }),
         { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     }
 
-    console.log(`Hämtar ${dataType} data från g0v.se API...`);
+    // Normalisera dataType - konvertera understreck till bindestreck för konsistens
+    const dataType = rawDataType.replace(/_/g, "-");
+    console.log(`Hämtar ${dataType} data från g0v.se API... (original: ${rawDataType})`);
 
     const endpointMap: Record<string, { url: string, table: string }> = {
       'pressmeddelanden': { url: 'https://g0v.se/pressmeddelanden.json', table: 'regeringskansliet_pressmeddelanden' },
@@ -159,8 +161,12 @@ Deno.serve(async (req) => {
     const endpoint = endpointMap[dataType];
     
     if (!endpoint) {
+      const availableTypes = Object.keys(endpointMap).join(', ');
       return new Response(
-        JSON.stringify({ success: false, message: 'Okänd datatyp' }),
+        JSON.stringify({ 
+          success: false, 
+          message: `Okänd datatyp: "${dataType}". Tillgängliga: ${availableTypes}` 
+        }),
         { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 400 }
       );
     }

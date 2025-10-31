@@ -1,6 +1,6 @@
 import { InstitutionCard } from "@/components/InstitutionCard";
-import riksdagenSymbol from "@/assets/riksdagen-symbol.png";
-import regeringskanslientSymbol from "@/assets/regeringskansliet-symbol.png";
+import riksdagenLogo from "@/assets/riksdagen-logo.svg";
+import regeringskanslientLogo from "@/assets/regeringskansliet-logo.svg";
 
 const Index = () => {
   return (
@@ -20,14 +20,14 @@ const Index = () => {
             title="Riksdagen"
             description="Utforska Sveriges riksdag med AI. Få insikter om propositioner, debatter och beslutsprocesser."
             href="https://riksdagen.ai"
-            image={riksdagenSymbol}
+            image={riksdagenLogo}
           />
           
           <InstitutionCard
             title="Regeringskansliet"
             description="Upptäck regeringens arbete och organisation. AI-driven information om departement och policy."
             href="https://regeringskansliet.ai"
-            image={regeringskanslientSymbol}
+            image={regeringskanslientLogo}
           />
         </div>
 

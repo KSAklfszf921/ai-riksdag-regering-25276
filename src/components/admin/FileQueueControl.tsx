@@ -7,6 +7,7 @@ import { Progress } from "@/components/ui/progress";
 import { Badge } from "@/components/ui/badge";
 import { Download, RefreshCw, Trash2, CheckCircle2, AlertCircle, Clock } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+import { AutoFileProcessor } from "./AutoFileProcessor";
 
 export const FileQueueControl = () => {
   const { toast } = useToast();
@@ -67,20 +68,23 @@ export const FileQueueControl = () => {
   const processQueue = async () => {
     setIsProcessing(true);
     try {
-      const { error } = await supabase.functions.invoke("process-file-queue");
+      const { data, error } = await supabase.functions.invoke("process-file-queue");
 
       if (error) throw error;
 
+      const result = data as { processed?: number; failed?: number };
+
       toast({
-        title: "Filprocessing startad",
-        description: "Filer laddas ner i bakgrunden",
+        title: "Filprocessing slutförd",
+        description: `${result.processed || 0} filer processade, ${result.failed || 0} misslyckades`,
       });
 
       refetch();
     } catch (error: any) {
+      console.error("File queue processing error:", error);
       toast({
         title: "Fel vid filprocessing",
-        description: error.message,
+        description: error.message || "Okänt fel uppstod",
         variant: "destructive",
       });
     } finally {
@@ -143,6 +147,7 @@ export const FileQueueControl = () => {
 
   return (
     <div className="space-y-6">
+      <AutoFileProcessor />
       <Card>
         <CardHeader>
           <div className="flex items-center justify-between">

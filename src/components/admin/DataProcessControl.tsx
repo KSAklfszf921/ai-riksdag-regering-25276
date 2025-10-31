@@ -1,15 +1,9 @@
 import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
-import { Progress } from "@/components/ui/progress";
-import { Play, StopCircle, RotateCcw, Trash2, CheckCircle2, AlertCircle, Loader2, Clock } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
-import { formatDistanceToNow } from "date-fns";
-import { sv } from "date-fns/locale";
 import { BulkOperations } from "./BulkOperations";
+import { ProgressCard } from "./ProgressCard";
 
 interface DataProcessControlProps {
   source: "riksdagen" | "regeringskansliet";
@@ -190,120 +184,20 @@ export const DataProcessControl = ({ source }: DataProcessControlProps) => {
         onRefetch={refetch} 
       />
       {progressItems.map((item) => {
-        const progress = item.total_items
-          ? (item.items_fetched / item.total_items) * 100
-          : 0;
         const control = getControlStatus(item.data_type);
-        const isStopped = item.status === "stopped" || control?.should_stop === true;
         const isLoading = loadingStates[item.data_type];
 
         return (
-          <Card key={item.id}>
-            <CardHeader>
-              <div className="flex items-center justify-between">
-                <div className="flex-1">
-                  <CardTitle className="text-lg flex items-center gap-2">
-                    {item.data_type}
-                    {item.status === "completed" && (
-                      <CheckCircle2 className="h-4 w-4 text-green-600" />
-                    )}
-                    {item.status === "failed" && (
-                      <AlertCircle className="h-4 w-4 text-red-600" />
-                    )}
-                    {item.status === "in_progress" && !isStopped && (
-                      <Loader2 className="h-4 w-4 text-blue-600 animate-spin" />
-                    )}
-                  </CardTitle>
-                  <CardDescription className="flex items-center gap-4 mt-1">
-                    <Badge
-                      variant={
-                        item.status === "completed"
-                          ? "default"
-                          : item.status === "failed"
-                          ? "destructive"
-                          : isStopped
-                          ? "outline"
-                          : "secondary"
-                      }
-                    >
-                      {isStopped ? "STOPPAD" : item.status}
-                    </Badge>
-                    {item.last_fetched_at && (
-                      <span className="text-xs flex items-center gap-1">
-                        <Clock className="h-3 w-3" />
-                        {formatDistanceToNow(new Date(item.last_fetched_at), {
-                          addSuffix: true,
-                          locale: sv,
-                        })}
-                      </span>
-                    )}
-                  </CardDescription>
-                </div>
-                <div className="flex gap-2">
-                  {item.status !== "in_progress" && (
-                    <Button
-                      size="sm"
-                      onClick={() => startFetch(item.data_type)}
-                      disabled={isLoading}
-                    >
-                      <Play className="h-4 w-4 mr-1" />
-                      Starta
-                    </Button>
-                  )}
-                  {item.status === "in_progress" && !isStopped && (
-                    <Button
-                      size="sm"
-                      variant="destructive"
-                      onClick={() => stopFetch(item.data_type)}
-                    >
-                      <StopCircle className="h-4 w-4 mr-1" />
-                      Stoppa
-                    </Button>
-                  )}
-                  {(item.status === "stopped" ||
-                    item.status === "failed" ||
-                    item.status === "completed") && (
-                    <Button
-                      size="sm"
-                      variant="outline"
-                      onClick={() => resetProgress(item.data_type)}
-                    >
-                      <RotateCcw className="h-4 w-4 mr-1" />
-                      Återställ
-                    </Button>
-                  )}
-                  <Button
-                    size="sm"
-                    variant="ghost"
-                    onClick={() => deleteProgress(item.data_type)}
-                  >
-                    <Trash2 className="h-4 w-4" />
-                  </Button>
-                </div>
-              </div>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-2">
-                <div className="flex justify-between text-sm">
-                  <span>
-                    {item.items_fetched} / {item.total_items || "?"} poster
-                  </span>
-                  <span>{Math.round(progress)}%</span>
-                </div>
-                <Progress value={progress} />
-                {item.total_pages && (
-                  <p className="text-xs text-muted-foreground">
-                    Sida {item.current_page} / {item.total_pages}
-                  </p>
-                )}
-                {item.error_message && (
-                  <p className="text-xs text-red-600 mt-2">
-                    {item.error_message}
-                  </p>
-                )}
-              </div>
-            </CardContent>
-          </Card>
+          <ProgressCard
+            key={item.id}
+            item={item}
+            control={control}
+            isLoading={isLoading}
+            onStart={() => startFetch(item.data_type)}
+            onStop={() => stopFetch(item.data_type)}
+            onReset={() => resetProgress(item.data_type)}
+            onDelete={() => deleteProgress(item.data_type)}
+          />
         );
       })}
     </div>

@@ -7,6 +7,8 @@ import Index from "./pages/Index";
 import Riksdagen from "./pages/Riksdagen";
 import Ledamoter from "./pages/Ledamoter";
 import Dokument from "./pages/Dokument";
+import Anforanden from "./pages/Anforanden";
+import Voteringar from "./pages/Voteringar";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -22,6 +24,8 @@ const App = () => (
           <Route path="/riksdagen" element={<Riksdagen />} />
           <Route path="/riksdagen/ledamoter" element={<Ledamoter />} />
           <Route path="/riksdagen/dokument" element={<Dokument />} />
+          <Route path="/riksdagen/anforanden" element={<Anforanden />} />
+          <Route path="/riksdagen/voteringar" element={<Voteringar />} />
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
           <Route path="*" element={<NotFound />} />
         </Routes>

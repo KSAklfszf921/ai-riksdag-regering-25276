@@ -151,10 +151,20 @@ Deno.serve(async (req) => {
     const dataType = rawDataType.replace(/_/g, "-");
     console.log(`Hämtar ${dataType} data från g0v.se API... (original: ${rawDataType})`);
 
+    // Block 'dokument' endpoint as it returns 10,000+ items causing memory issues
+    if (dataType === 'dokument') {
+      return new Response(
+        JSON.stringify({ 
+          success: false, 
+          message: 'Endpointen "dokument" returnerar för mycket data (~10,000+ poster) och kan inte användas direkt. Använd istället specifika dokumenttyper som "propositioner", "sou", "departementsserien", etc.' 
+        }),
+        { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 400 }
+      );
+    }
+
     const endpointMap: Record<string, { url: string, table: string }> = {
       'pressmeddelanden': { url: 'https://g0v.se/pressmeddelanden.json', table: 'regeringskansliet_pressmeddelanden' },
       'propositioner': { url: 'https://g0v.se/rattsliga-dokument/proposition.json', table: 'regeringskansliet_propositioner' },
-      'dokument': { url: 'https://g0v.se/api/items.json', table: 'regeringskansliet_dokument' },
       'kategorier': { url: 'https://g0v.se/api/codes.json', table: 'regeringskansliet_kategorier' },
       'departementsserien': { url: 'https://g0v.se/rattsliga-dokument/departementsserien-och-promemorior.json', table: 'regeringskansliet_departementsserien' },
       'forordningsmotiv': { url: 'https://g0v.se/rattsliga-dokument/forordningsmotiv.json', table: 'regeringskansliet_forordningsmotiv' },

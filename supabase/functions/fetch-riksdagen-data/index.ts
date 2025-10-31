@@ -241,7 +241,7 @@ Deno.serve(async (req) => {
     };
 
     if (dataType === 'dokument') {
-      apiUrl = buildApiUrl('https://data.riksdagen.se/dokumentlista', 'json');
+      apiUrl = buildApiUrl('https://data.riksdagen.se/dokumentlista/', 'json');
       // Lägg till dokumentspecifika parametrar
       const url = new URL(apiUrl);
       url.searchParams.append('sort', 'datum');
@@ -253,10 +253,10 @@ Deno.serve(async (req) => {
       tableName = 'riksdagen_ledamoter';
     } else if (dataType === 'anforanden') {
       // Anföranden använder XML-format
-      apiUrl = buildApiUrl('https://data.riksdagen.se/anforandelista', 'xml');
+      apiUrl = buildApiUrl('https://data.riksdagen.se/anforandelista/', 'xml');
       tableName = 'riksdagen_anforanden';
     } else if (dataType === 'voteringar') {
-      apiUrl = buildApiUrl('https://data.riksdagen.se/voteringlista', 'json');
+      apiUrl = buildApiUrl('https://data.riksdagen.se/voteringlista/', 'json');
       const url = new URL(apiUrl);
       url.searchParams.append('sort', 'datum');
       url.searchParams.append('sortorder', 'desc');

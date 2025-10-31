@@ -73,6 +73,14 @@ export const AdminSetup = () => {
         </CardDescription>
       </CardHeader>
       <CardContent className="space-y-4">
+        {!currentUser && (
+          <div className="p-4 border rounded bg-amber-50 dark:bg-amber-950/20">
+            <p className="text-sm text-amber-900 dark:text-amber-100 mb-2">
+              <strong>Första gången?</strong> Logga in först för att kunna ge dig själv admin-rättigheter.
+            </p>
+          </div>
+        )}
+
         {currentUser && (
           <div className="p-4 border rounded bg-muted/50">
             <p className="text-sm mb-2">

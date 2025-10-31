@@ -1,13 +1,33 @@
 import { Link } from "react-router-dom";
 import { InstitutionCard } from "@/components/InstitutionCard";
 import { Button } from "@/components/ui/button";
-import { Shield } from "lucide-react";
+import { Shield, LogIn, LogOut } from "lucide-react";
 import { useIsAdmin } from "@/hooks/useIsAdmin";
+import { supabase } from "@/integrations/supabase/client";
+import { useQuery } from "@tanstack/react-query";
+import { useToast } from "@/hooks/use-toast";
 import riksdagenLogo from "@/assets/riksdagen-logo.svg";
 import regeringskanslientLogo from "@/assets/regeringskansliet-logo.svg";
 
 const Index = () => {
   const { isAdmin } = useIsAdmin();
+  const { toast } = useToast();
+
+  const { data: user } = useQuery({
+    queryKey: ["current-user"],
+    queryFn: async () => {
+      const { data } = await supabase.auth.getUser();
+      return data.user;
+    },
+  });
+
+  const handleLogout = async () => {
+    await supabase.auth.signOut();
+    toast({
+      title: "Utloggad",
+      description: "Du är nu utloggad",
+    });
+  };
 
   return (
     <div className="min-h-screen bg-background">
@@ -15,16 +35,29 @@ const Index = () => {
       <div className="w-full bg-primary py-1"></div>
 
       <div className="container mx-auto px-4 py-12 md:py-20 max-w-6xl">
-        {isAdmin && (
-          <div className="flex justify-end mb-4">
+        <div className="flex justify-end gap-2 mb-4">
+          {isAdmin && (
             <Link to="/admin">
               <Button variant="outline" size="sm">
                 <Shield className="h-4 w-4 mr-2" />
                 Admin Panel
               </Button>
             </Link>
-          </div>
-        )}
+          )}
+          {user ? (
+            <Button variant="outline" size="sm" onClick={handleLogout}>
+              <LogOut className="h-4 w-4 mr-2" />
+              Logga ut
+            </Button>
+          ) : (
+            <Link to="/login">
+              <Button variant="outline" size="sm">
+                <LogIn className="h-4 w-4 mr-2" />
+                Logga in
+              </Button>
+            </Link>
+          )}
+        </div>
 
         <header className="text-center mb-16 md:mb-20">
           <h1 className="text-4xl md:text-5xl lg:text-6xl font-serif font-bold text-foreground mb-4 tracking-tight">

@@ -9,6 +9,7 @@ import { Play, StopCircle, RotateCcw, Trash2, CheckCircle2, AlertCircle, Loader2
 import { useToast } from "@/hooks/use-toast";
 import { formatDistanceToNow } from "date-fns";
 import { sv } from "date-fns/locale";
+import { BulkOperations } from "./BulkOperations";
 
 interface DataProcessControlProps {
   source: "riksdagen" | "regeringskansliet";
@@ -183,6 +184,11 @@ export const DataProcessControl = ({ source }: DataProcessControlProps) => {
 
   return (
     <div className="space-y-4">
+      <BulkOperations 
+        source={source} 
+        progressItems={progressItems} 
+        onRefetch={refetch} 
+      />
       {progressItems.map((item) => {
         const progress = item.total_items
           ? (item.items_fetched / item.total_items) * 100

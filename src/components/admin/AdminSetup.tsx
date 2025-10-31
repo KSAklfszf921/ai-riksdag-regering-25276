@@ -81,25 +81,32 @@ export const AdminSetup = () => {
       </CardHeader>
       <CardContent className="space-y-4">
         {!currentUser && (
-          <div className="p-4 border rounded bg-red-50 dark:bg-red-950/20 border-red-200 dark:border-red-800">
-            <p className="text-sm text-red-900 dark:text-red-100 mb-2">
-              <strong>⚠️ Du är inte inloggad!</strong>
+          <div className="p-4 border rounded bg-destructive/10 border-destructive/30">
+            <p className="text-sm font-semibold mb-2">
+              ⚠️ Du är inte inloggad!
             </p>
-            <p className="text-xs text-red-700 dark:text-red-300">
-              Gå till startsidan och klicka på "Logga in" först. Använd Magic Link för enklast inloggning.
+            <p className="text-sm mb-3 text-muted-foreground">
+              För att få admin-åtkomst måste du först logga in. Steg för steg:
             </p>
+            <ol className="text-sm space-y-2 mb-4 list-decimal list-inside text-muted-foreground">
+              <li>Gå till startsidan (klicka logotypen)</li>
+              <li>Klicka "Logga in för Admin"</li>
+              <li>Använd <strong>Magic Link</strong> (rekommenderat) - ange bara din e-post</li>
+              <li>Kolla din inbox och klicka på länken</li>
+              <li>Kom tillbaka hit och klicka "Ge mig admin-rättigheter"</li>
+            </ol>
           </div>
         )}
 
         {currentUser && (
-          <div className="p-4 border rounded bg-green-50 dark:bg-green-950/20 border-green-200 dark:border-green-800">
-            <p className="text-sm mb-2 text-green-900 dark:text-green-100">
+          <div className="p-4 border rounded bg-success/10 border-success/30">
+            <p className="text-sm mb-2 font-semibold">
               ✅ Inloggad som: <strong>{currentUser.email}</strong>
             </p>
-            <p className="text-xs mb-3 text-green-700 dark:text-green-300">
-              Klicka nedan för att ge dig själv admin-rättigheter (första användaren kan alltid bli admin)
+            <p className="text-sm mb-4 text-muted-foreground">
+              Perfekt! Nu kan du ge dig själv admin-rättigheter. Detta är säkert för första användaren och ger dig full åtkomst till admin-panelen.
             </p>
-            <Button onClick={makeSelfAdmin} size="sm">
+            <Button onClick={makeSelfAdmin} size="sm" className="w-full sm:w-auto">
               <UserPlus className="h-4 w-4 mr-2" />
               Ge mig admin-rättigheter
             </Button>

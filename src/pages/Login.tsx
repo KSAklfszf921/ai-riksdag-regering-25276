@@ -134,9 +134,10 @@ const Login = () => {
             </TabsList>
 
             <TabsContent value="magic" className="space-y-4">
-              <div className="p-3 bg-green-50 dark:bg-green-950/20 border border-green-200 dark:border-green-800 rounded text-sm">
-                <p className="text-green-900 dark:text-green-100">
-                  <strong>Rekommenderat!</strong> Ange din e-post så skickar vi en länk som loggar in dig automatiskt.
+              <div className="p-3 bg-success/10 border border-success/30 rounded text-sm">
+                <p className="font-semibold mb-2">✨ Rekommenderat!</p>
+                <p className="text-muted-foreground text-xs">
+                  Ange din e-post så skickar vi en magic link. Klicka på länken i din inbox för att logga in automatiskt - inget lösenord behövs!
                 </p>
               </div>
               

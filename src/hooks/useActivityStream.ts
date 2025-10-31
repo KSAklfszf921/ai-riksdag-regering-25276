@@ -21,7 +21,7 @@ export const useActivityStream = () => {
 
       if (error) throw error;
 
-      return data as ActivityItem[];
+      return (data || []) as any as ActivityItem[];
     },
     refetchInterval: 5000, // Every 5 seconds
   });

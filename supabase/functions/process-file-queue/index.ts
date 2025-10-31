@@ -122,12 +122,16 @@ Deno.serve(async (req) => {
           .single();
 
         let updatedFiles = [fileMetadata];
-        if (existingDoc?.[item.column_name] && Array.isArray(existingDoc[item.column_name])) {
+        if (existingDoc?.[item.column_name]) {
           const existing = existingDoc[item.column_name];
-          const fileExists = existing.some((f: any) => f.name === filename);
-          updatedFiles = fileExists 
-            ? existing.map((f: any) => f.name === filename ? fileMetadata : f)
-            : [...existing, fileMetadata];
+          
+          // Ensure existing is an array
+          if (Array.isArray(existing)) {
+            const fileExists = existing.some((f: any) => f.name === filename);
+            updatedFiles = fileExists 
+              ? existing.map((f: any) => f.name === filename ? fileMetadata : f)
+              : [...existing, fileMetadata];
+          }
         }
 
         await supabaseClient

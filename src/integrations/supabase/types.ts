@@ -14,6 +14,33 @@ export type Database = {
   }
   public: {
     Tables: {
+      admin_activity_log: {
+        Row: {
+          action_type: string
+          created_at: string
+          description: string
+          id: string
+          metadata: Json | null
+          user_id: string | null
+        }
+        Insert: {
+          action_type: string
+          created_at?: string
+          description: string
+          id?: string
+          metadata?: Json | null
+          user_id?: string | null
+        }
+        Update: {
+          action_type?: string
+          created_at?: string
+          description?: string
+          id?: string
+          metadata?: Json | null
+          user_id?: string | null
+        }
+        Relationships: []
+      }
       data_fetch_control: {
         Row: {
           data_type: string
@@ -1939,7 +1966,14 @@ export type Database = {
       }
     }
     Views: {
-      [_ in never]: never
+      storage_statistics: {
+        Row: {
+          bucket_id: string | null
+          file_count: number | null
+          total_size_bytes: number | null
+        }
+        Relationships: []
+      }
     }
     Functions: {
       get_table_sizes: {
@@ -1974,6 +2008,15 @@ export type Database = {
         Returns: undefined
       }
       is_admin: { Args: never; Returns: boolean }
+      log_admin_activity: {
+        Args: {
+          p_action_type: string
+          p_description: string
+          p_metadata?: Json
+        }
+        Returns: undefined
+      }
+      refresh_storage_statistics: { Args: never; Returns: undefined }
     }
     Enums: {
       app_role: "admin" | "moderator" | "user"

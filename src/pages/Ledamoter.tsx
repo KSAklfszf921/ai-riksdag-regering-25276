@@ -7,6 +7,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import FilterBar from "@/components/FilterBar";
+import EmptyState from "@/components/EmptyState";
 
 const Ledamoter = () => {
   const [searchQuery, setSearchQuery] = useState("");
@@ -80,6 +81,11 @@ const Ledamoter = () => {
               </Card>
             ))}
           </div>
+        ) : filteredLedamoter && filteredLedamoter.length === 0 ? (
+          <EmptyState
+            message={searchQuery ? "Inga ledamöter hittades" : "Inga ledamöter i databasen"}
+            suggestion={searchQuery ? "Prova att ändra din sökning" : "Använd 'Hämta data'-knappen på Riksdagen-sidan för att ladda ned ledamöter"}
+          />
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
             {filteredLedamoter?.map((ledamot) => (

@@ -81,7 +81,8 @@ Deno.serve(async (req) => {
       apiUrl = `https://data.riksdagen.se/personlista/?utformat=json&rdlstatus=samtliga`;
       tableName = 'riksdagen_ledamoter';
     } else if (dataType === 'anforanden') {
-      apiUrl = `https://data.riksdagen.se/anforandelist/?utformat=json&sz=${limit}&sort=datum&sortorder=desc`;
+      // Använd dokument-baserat anförande-API
+      apiUrl = `https://data.riksdagen.se/anforande/?utformat=json&sz=${limit}&sort=c_datum&sortorder=desc`;
       tableName = 'riksdagen_anforanden';
     } else if (dataType === 'voteringar') {
       apiUrl = `https://data.riksdagen.se/voteringlista/?utformat=json&sz=${limit}&sort=datum&sortorder=desc`;
@@ -179,24 +180,24 @@ Deno.serve(async (req) => {
           errors++;
         }
       }
-    } else if (dataType === 'anforanden' && data.anforandelist?.anforande) {
-      const anforanden = Array.isArray(data.anforandelist.anforande) 
-        ? data.anforandelist.anforande 
-        : [data.anforandelist.anforande];
+    } else if (dataType === 'anforanden' && data.anforandelista?.anforande) {
+      const anforanden = Array.isArray(data.anforandelista.anforande) 
+        ? data.anforandelista.anforande 
+        : [data.anforandelista.anforande];
 
       for (const anf of anforanden) {
         try {
           const anforandeData: AnforandeData = {
-            anforande_id: anf.anforande_id,
+            anforande_id: anf.anforande_id || anf.dokument_id,
             intressent_id: anf.intressent_id,
-            dok_id: anf.dok_id,
-            debattnamn: anf.debattnamn,
-            debattsekund: anf.debattsekund ? parseInt(anf.debattsekund) : undefined,
+            dok_id: anf.dokument_id || anf.dok_id,
+            debattnamn: anf.debatt || anf.debattnamn,
+            debattsekund: anf.anforandenummer ? parseInt(anf.anforandenummer) : undefined,
             anftext: anf.anforandetext,
             anfdatum: anf.datum,
-            avsnittsrubrik: anf.avsnittsrubrik,
+            avsnittsrubrik: anf.rubrik || anf.avsnittsrubrik,
             parti: anf.parti,
-            talare: anf.talare,
+            talare: anf.namn || anf.talare,
           };
 
           const { error } = await supabaseClient

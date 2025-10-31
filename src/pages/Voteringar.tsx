@@ -7,6 +7,7 @@ import { Badge } from "@/components/ui/badge";
 import { Calendar, CheckCircle2 } from "lucide-react";
 import { formatDistanceToNow } from "date-fns";
 import { sv } from "date-fns/locale";
+import EmptyState from "@/components/EmptyState";
 
 const Voteringar = () => {
   const { data: voteringar, isLoading } = useQuery({
@@ -52,6 +53,11 @@ const Voteringar = () => {
               </Card>
             ))}
           </div>
+        ) : voteringar && voteringar.length === 0 ? (
+          <EmptyState
+            message="Inga voteringar hittades"
+            suggestion="Använd 'Hämta data'-knappen på Riksdagen-sidan för att ladda ned voteringar från Riksdagens API"
+          />
         ) : (
           <div className="space-y-4">
             {voteringar?.map((vot) => (

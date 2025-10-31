@@ -18,20 +18,27 @@ const DataFetchButton = ({ type = 'riksdagen' }: DataFetchButtonProps) => {
   const [isLoading, setIsLoading] = useState(false);
   const { toast } = useToast();
 
-  const fetchData = async (dataType: string) => {
+  const fetchData = async (dataType: string, paginate: boolean = true) => {
     setIsLoading(true);
     const functionName = type === 'riksdagen' ? 'fetch-riksdagen-data' : 'fetch-regeringskansliet-data';
     
     try {
       const { data, error } = await supabase.functions.invoke(functionName, {
-        body: { dataType }
+        body: { 
+          dataType,
+          paginate: paginate,
+          maxPages: paginate ? null : 1
+        }
       });
 
       if (error) throw error;
 
+      const pages = data.pages ? ` (${data.pages} sidor)` : '';
+      const errors = data.errors > 0 ? `, ${data.errors} fel` : '';
+      
       toast({
         title: "Data hämtad!",
-        description: `${data.inserted} ${dataType} hämtades från API:et`,
+        description: `${data.inserted} ${dataType} hämtades${pages}${errors}`,
       });
     } catch (error: any) {
       toast({

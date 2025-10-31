@@ -14,6 +14,51 @@ export type Database = {
   }
   public: {
     Tables: {
+      data_fetch_progress: {
+        Row: {
+          created_at: string | null
+          current_page: number | null
+          data_type: string
+          error_message: string | null
+          id: string
+          items_fetched: number | null
+          last_fetched_at: string | null
+          source: string
+          status: string | null
+          total_items: number | null
+          total_pages: number | null
+          updated_at: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          current_page?: number | null
+          data_type: string
+          error_message?: string | null
+          id?: string
+          items_fetched?: number | null
+          last_fetched_at?: string | null
+          source: string
+          status?: string | null
+          total_items?: number | null
+          total_pages?: number | null
+          updated_at?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          current_page?: number | null
+          data_type?: string
+          error_message?: string | null
+          id?: string
+          items_fetched?: number | null
+          last_fetched_at?: string | null
+          source?: string
+          status?: string | null
+          total_items?: number | null
+          total_pages?: number | null
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
       regeringskansliet_api_log: {
         Row: {
           antal_poster: number | null
@@ -49,6 +94,7 @@ export type Database = {
           document_id: string
           id: string
           kategorier: string[] | null
+          local_files: Json | null
           markdown_url: string | null
           publicerad_datum: string | null
           titel: string | null
@@ -64,6 +110,7 @@ export type Database = {
           document_id: string
           id?: string
           kategorier?: string[] | null
+          local_files?: Json | null
           markdown_url?: string | null
           publicerad_datum?: string | null
           titel?: string | null
@@ -79,6 +126,7 @@ export type Database = {
           document_id?: string
           id?: string
           kategorier?: string[] | null
+          local_files?: Json | null
           markdown_url?: string | null
           publicerad_datum?: string | null
           titel?: string | null
@@ -97,6 +145,7 @@ export type Database = {
           document_id: string
           id: string
           kategorier: string[] | null
+          local_files: Json | null
           markdown_url: string | null
           publicerad_datum: string | null
           titel: string | null
@@ -112,6 +161,7 @@ export type Database = {
           document_id: string
           id?: string
           kategorier?: string[] | null
+          local_files?: Json | null
           markdown_url?: string | null
           publicerad_datum?: string | null
           titel?: string | null
@@ -127,6 +177,7 @@ export type Database = {
           document_id?: string
           id?: string
           kategorier?: string[] | null
+          local_files?: Json | null
           markdown_url?: string | null
           publicerad_datum?: string | null
           titel?: string | null
@@ -145,6 +196,7 @@ export type Database = {
           document_id: string
           id: string
           kategorier: string[] | null
+          local_files: Json | null
           markdown_url: string | null
           publicerad_datum: string | null
           titel: string | null
@@ -160,6 +212,7 @@ export type Database = {
           document_id: string
           id?: string
           kategorier?: string[] | null
+          local_files?: Json | null
           markdown_url?: string | null
           publicerad_datum?: string | null
           titel?: string | null
@@ -175,6 +228,7 @@ export type Database = {
           document_id?: string
           id?: string
           kategorier?: string[] | null
+          local_files?: Json | null
           markdown_url?: string | null
           publicerad_datum?: string | null
           titel?: string | null
@@ -193,6 +247,7 @@ export type Database = {
           document_id: string
           id: string
           kategorier: string[] | null
+          local_files: Json | null
           markdown_url: string | null
           publicerad_datum: string | null
           titel: string | null
@@ -208,6 +263,7 @@ export type Database = {
           document_id: string
           id?: string
           kategorier?: string[] | null
+          local_files?: Json | null
           markdown_url?: string | null
           publicerad_datum?: string | null
           titel?: string | null
@@ -223,6 +279,7 @@ export type Database = {
           document_id?: string
           id?: string
           kategorier?: string[] | null
+          local_files?: Json | null
           markdown_url?: string | null
           publicerad_datum?: string | null
           titel?: string | null
@@ -241,6 +298,7 @@ export type Database = {
           document_id: string
           id: string
           kategorier: string[] | null
+          local_files: Json | null
           markdown_url: string | null
           publicerad_datum: string | null
           titel: string | null
@@ -256,6 +314,7 @@ export type Database = {
           document_id: string
           id?: string
           kategorier?: string[] | null
+          local_files?: Json | null
           markdown_url?: string | null
           publicerad_datum?: string | null
           titel?: string | null
@@ -271,6 +330,7 @@ export type Database = {
           document_id?: string
           id?: string
           kategorier?: string[] | null
+          local_files?: Json | null
           markdown_url?: string | null
           publicerad_datum?: string | null
           titel?: string | null
@@ -289,6 +349,7 @@ export type Database = {
           document_id: string
           id: string
           kategorier: string[] | null
+          local_files: Json | null
           markdown_url: string | null
           publicerad_datum: string | null
           titel: string | null
@@ -304,6 +365,7 @@ export type Database = {
           document_id: string
           id?: string
           kategorier?: string[] | null
+          local_files?: Json | null
           markdown_url?: string | null
           publicerad_datum?: string | null
           titel?: string | null
@@ -319,6 +381,7 @@ export type Database = {
           document_id?: string
           id?: string
           kategorier?: string[] | null
+          local_files?: Json | null
           markdown_url?: string | null
           publicerad_datum?: string | null
           titel?: string | null
@@ -339,6 +402,7 @@ export type Database = {
           id: string
           innehall: string | null
           kategorier: string[] | null
+          local_files: Json | null
           markdown_url: string | null
           publicerad_datum: string | null
           titel: string | null
@@ -356,6 +420,7 @@ export type Database = {
           id?: string
           innehall?: string | null
           kategorier?: string[] | null
+          local_files?: Json | null
           markdown_url?: string | null
           publicerad_datum?: string | null
           titel?: string | null
@@ -373,6 +438,7 @@ export type Database = {
           id?: string
           innehall?: string | null
           kategorier?: string[] | null
+          local_files?: Json | null
           markdown_url?: string | null
           publicerad_datum?: string | null
           titel?: string | null
@@ -391,6 +457,7 @@ export type Database = {
           document_id: string
           id: string
           kategorier: string[] | null
+          local_files: Json | null
           markdown_url: string | null
           publicerad_datum: string | null
           titel: string | null
@@ -406,6 +473,7 @@ export type Database = {
           document_id: string
           id?: string
           kategorier?: string[] | null
+          local_files?: Json | null
           markdown_url?: string | null
           publicerad_datum?: string | null
           titel?: string | null
@@ -421,6 +489,7 @@ export type Database = {
           document_id?: string
           id?: string
           kategorier?: string[] | null
+          local_files?: Json | null
           markdown_url?: string | null
           publicerad_datum?: string | null
           titel?: string | null
@@ -439,6 +508,7 @@ export type Database = {
           document_id: string
           id: string
           kategorier: string[] | null
+          local_files: Json | null
           markdown_url: string | null
           publicerad_datum: string | null
           titel: string | null
@@ -454,6 +524,7 @@ export type Database = {
           document_id: string
           id?: string
           kategorier?: string[] | null
+          local_files?: Json | null
           markdown_url?: string | null
           publicerad_datum?: string | null
           titel?: string | null
@@ -469,6 +540,7 @@ export type Database = {
           document_id?: string
           id?: string
           kategorier?: string[] | null
+          local_files?: Json | null
           markdown_url?: string | null
           publicerad_datum?: string | null
           titel?: string | null
@@ -487,6 +559,7 @@ export type Database = {
           document_id: string
           id: string
           kategorier: string[] | null
+          local_files: Json | null
           markdown_url: string | null
           publicerad_datum: string | null
           titel: string | null
@@ -502,6 +575,7 @@ export type Database = {
           document_id: string
           id?: string
           kategorier?: string[] | null
+          local_files?: Json | null
           markdown_url?: string | null
           publicerad_datum?: string | null
           titel?: string | null
@@ -517,6 +591,7 @@ export type Database = {
           document_id?: string
           id?: string
           kategorier?: string[] | null
+          local_files?: Json | null
           markdown_url?: string | null
           publicerad_datum?: string | null
           titel?: string | null
@@ -535,6 +610,7 @@ export type Database = {
           document_id: string
           id: string
           kategorier: string[] | null
+          local_files: Json | null
           markdown_url: string | null
           publicerad_datum: string | null
           titel: string | null
@@ -550,6 +626,7 @@ export type Database = {
           document_id: string
           id?: string
           kategorier?: string[] | null
+          local_files?: Json | null
           markdown_url?: string | null
           publicerad_datum?: string | null
           titel?: string | null
@@ -565,6 +642,7 @@ export type Database = {
           document_id?: string
           id?: string
           kategorier?: string[] | null
+          local_files?: Json | null
           markdown_url?: string | null
           publicerad_datum?: string | null
           titel?: string | null
@@ -610,6 +688,7 @@ export type Database = {
           document_id: string
           id: string
           kategorier: string[] | null
+          local_files: Json | null
           markdown_url: string | null
           publicerad_datum: string | null
           titel: string | null
@@ -625,6 +704,7 @@ export type Database = {
           document_id: string
           id?: string
           kategorier?: string[] | null
+          local_files?: Json | null
           markdown_url?: string | null
           publicerad_datum?: string | null
           titel?: string | null
@@ -640,6 +720,7 @@ export type Database = {
           document_id?: string
           id?: string
           kategorier?: string[] | null
+          local_files?: Json | null
           markdown_url?: string | null
           publicerad_datum?: string | null
           titel?: string | null
@@ -658,6 +739,7 @@ export type Database = {
           document_id: string
           id: string
           kategorier: string[] | null
+          local_files: Json | null
           markdown_url: string | null
           publicerad_datum: string | null
           titel: string | null
@@ -673,6 +755,7 @@ export type Database = {
           document_id: string
           id?: string
           kategorier?: string[] | null
+          local_files?: Json | null
           markdown_url?: string | null
           publicerad_datum?: string | null
           titel?: string | null
@@ -688,6 +771,7 @@ export type Database = {
           document_id?: string
           id?: string
           kategorier?: string[] | null
+          local_files?: Json | null
           markdown_url?: string | null
           publicerad_datum?: string | null
           titel?: string | null
@@ -706,6 +790,7 @@ export type Database = {
           document_id: string
           id: string
           kategorier: string[] | null
+          local_files: Json | null
           markdown_url: string | null
           publicerad_datum: string | null
           titel: string | null
@@ -721,6 +806,7 @@ export type Database = {
           document_id: string
           id?: string
           kategorier?: string[] | null
+          local_files?: Json | null
           markdown_url?: string | null
           publicerad_datum?: string | null
           titel?: string | null
@@ -736,6 +822,7 @@ export type Database = {
           document_id?: string
           id?: string
           kategorier?: string[] | null
+          local_files?: Json | null
           markdown_url?: string | null
           publicerad_datum?: string | null
           titel?: string | null
@@ -754,6 +841,7 @@ export type Database = {
           document_id: string
           id: string
           kategorier: string[] | null
+          local_files: Json | null
           markdown_url: string | null
           publicerad_datum: string | null
           titel: string | null
@@ -769,6 +857,7 @@ export type Database = {
           document_id: string
           id?: string
           kategorier?: string[] | null
+          local_files?: Json | null
           markdown_url?: string | null
           publicerad_datum?: string | null
           titel?: string | null
@@ -784,6 +873,7 @@ export type Database = {
           document_id?: string
           id?: string
           kategorier?: string[] | null
+          local_files?: Json | null
           markdown_url?: string | null
           publicerad_datum?: string | null
           titel?: string | null
@@ -801,6 +891,7 @@ export type Database = {
           document_id: string
           id: string
           innehall: string | null
+          local_bilagor: Json | null
           publicerad_datum: string | null
           titel: string | null
           updated_at: string
@@ -812,6 +903,7 @@ export type Database = {
           document_id: string
           id?: string
           innehall?: string | null
+          local_bilagor?: Json | null
           publicerad_datum?: string | null
           titel?: string | null
           updated_at?: string
@@ -823,6 +915,7 @@ export type Database = {
           document_id?: string
           id?: string
           innehall?: string | null
+          local_bilagor?: Json | null
           publicerad_datum?: string | null
           titel?: string | null
           updated_at?: string
@@ -837,6 +930,7 @@ export type Database = {
           departement: string | null
           document_id: string
           id: string
+          local_pdf_url: string | null
           pdf_url: string | null
           publicerad_datum: string | null
           titel: string | null
@@ -849,6 +943,7 @@ export type Database = {
           departement?: string | null
           document_id: string
           id?: string
+          local_pdf_url?: string | null
           pdf_url?: string | null
           publicerad_datum?: string | null
           titel?: string | null
@@ -861,6 +956,7 @@ export type Database = {
           departement?: string | null
           document_id?: string
           id?: string
+          local_pdf_url?: string | null
           pdf_url?: string | null
           publicerad_datum?: string | null
           titel?: string | null
@@ -877,6 +973,7 @@ export type Database = {
           document_id: string
           id: string
           kategorier: string[] | null
+          local_files: Json | null
           markdown_url: string | null
           publicerad_datum: string | null
           titel: string | null
@@ -892,6 +989,7 @@ export type Database = {
           document_id: string
           id?: string
           kategorier?: string[] | null
+          local_files?: Json | null
           markdown_url?: string | null
           publicerad_datum?: string | null
           titel?: string | null
@@ -907,6 +1005,7 @@ export type Database = {
           document_id?: string
           id?: string
           kategorier?: string[] | null
+          local_files?: Json | null
           markdown_url?: string | null
           publicerad_datum?: string | null
           titel?: string | null
@@ -925,6 +1024,7 @@ export type Database = {
           document_id: string
           id: string
           kategorier: string[] | null
+          local_files: Json | null
           markdown_url: string | null
           publicerad_datum: string | null
           titel: string | null
@@ -940,6 +1040,7 @@ export type Database = {
           document_id: string
           id?: string
           kategorier?: string[] | null
+          local_files?: Json | null
           markdown_url?: string | null
           publicerad_datum?: string | null
           titel?: string | null
@@ -955,6 +1056,7 @@ export type Database = {
           document_id?: string
           id?: string
           kategorier?: string[] | null
+          local_files?: Json | null
           markdown_url?: string | null
           publicerad_datum?: string | null
           titel?: string | null
@@ -973,6 +1075,7 @@ export type Database = {
           document_id: string
           id: string
           kategorier: string[] | null
+          local_files: Json | null
           markdown_url: string | null
           publicerad_datum: string | null
           titel: string | null
@@ -988,6 +1091,7 @@ export type Database = {
           document_id: string
           id?: string
           kategorier?: string[] | null
+          local_files?: Json | null
           markdown_url?: string | null
           publicerad_datum?: string | null
           titel?: string | null
@@ -1003,6 +1107,7 @@ export type Database = {
           document_id?: string
           id?: string
           kategorier?: string[] | null
+          local_files?: Json | null
           markdown_url?: string | null
           publicerad_datum?: string | null
           titel?: string | null
@@ -1021,6 +1126,7 @@ export type Database = {
           document_id: string
           id: string
           kategorier: string[] | null
+          local_files: Json | null
           markdown_url: string | null
           publicerad_datum: string | null
           titel: string | null
@@ -1036,6 +1142,7 @@ export type Database = {
           document_id: string
           id?: string
           kategorier?: string[] | null
+          local_files?: Json | null
           markdown_url?: string | null
           publicerad_datum?: string | null
           titel?: string | null
@@ -1051,6 +1158,7 @@ export type Database = {
           document_id?: string
           id?: string
           kategorier?: string[] | null
+          local_files?: Json | null
           markdown_url?: string | null
           publicerad_datum?: string | null
           titel?: string | null
@@ -1069,6 +1177,7 @@ export type Database = {
           document_id: string
           id: string
           kategorier: string[] | null
+          local_files: Json | null
           markdown_url: string | null
           publicerad_datum: string | null
           titel: string | null
@@ -1084,6 +1193,7 @@ export type Database = {
           document_id: string
           id?: string
           kategorier?: string[] | null
+          local_files?: Json | null
           markdown_url?: string | null
           publicerad_datum?: string | null
           titel?: string | null
@@ -1099,6 +1209,7 @@ export type Database = {
           document_id?: string
           id?: string
           kategorier?: string[] | null
+          local_files?: Json | null
           markdown_url?: string | null
           publicerad_datum?: string | null
           titel?: string | null
@@ -1117,6 +1228,7 @@ export type Database = {
           document_id: string
           id: string
           kategorier: string[] | null
+          local_files: Json | null
           markdown_url: string | null
           publicerad_datum: string | null
           titel: string | null
@@ -1132,6 +1244,7 @@ export type Database = {
           document_id: string
           id?: string
           kategorier?: string[] | null
+          local_files?: Json | null
           markdown_url?: string | null
           publicerad_datum?: string | null
           titel?: string | null
@@ -1147,6 +1260,7 @@ export type Database = {
           document_id?: string
           id?: string
           kategorier?: string[] | null
+          local_files?: Json | null
           markdown_url?: string | null
           publicerad_datum?: string | null
           titel?: string | null
@@ -1165,6 +1279,7 @@ export type Database = {
           document_id: string
           id: string
           kategorier: string[] | null
+          local_files: Json | null
           markdown_url: string | null
           publicerad_datum: string | null
           titel: string | null
@@ -1180,6 +1295,7 @@ export type Database = {
           document_id: string
           id?: string
           kategorier?: string[] | null
+          local_files?: Json | null
           markdown_url?: string | null
           publicerad_datum?: string | null
           titel?: string | null
@@ -1195,6 +1311,7 @@ export type Database = {
           document_id?: string
           id?: string
           kategorier?: string[] | null
+          local_files?: Json | null
           markdown_url?: string | null
           publicerad_datum?: string | null
           titel?: string | null
@@ -1213,6 +1330,7 @@ export type Database = {
           document_id: string
           id: string
           kategorier: string[] | null
+          local_files: Json | null
           markdown_url: string | null
           publicerad_datum: string | null
           titel: string | null
@@ -1228,6 +1346,7 @@ export type Database = {
           document_id: string
           id?: string
           kategorier?: string[] | null
+          local_files?: Json | null
           markdown_url?: string | null
           publicerad_datum?: string | null
           titel?: string | null
@@ -1243,6 +1362,7 @@ export type Database = {
           document_id?: string
           id?: string
           kategorier?: string[] | null
+          local_files?: Json | null
           markdown_url?: string | null
           publicerad_datum?: string | null
           titel?: string | null
@@ -1261,6 +1381,7 @@ export type Database = {
           document_id: string
           id: string
           kategorier: string[] | null
+          local_files: Json | null
           markdown_url: string | null
           publicerad_datum: string | null
           titel: string | null
@@ -1276,6 +1397,7 @@ export type Database = {
           document_id: string
           id?: string
           kategorier?: string[] | null
+          local_files?: Json | null
           markdown_url?: string | null
           publicerad_datum?: string | null
           titel?: string | null
@@ -1291,6 +1413,7 @@ export type Database = {
           document_id?: string
           id?: string
           kategorier?: string[] | null
+          local_files?: Json | null
           markdown_url?: string | null
           publicerad_datum?: string | null
           titel?: string | null
@@ -1309,6 +1432,7 @@ export type Database = {
           document_id: string
           id: string
           kategorier: string[] | null
+          local_files: Json | null
           markdown_url: string | null
           publicerad_datum: string | null
           titel: string | null
@@ -1324,6 +1448,7 @@ export type Database = {
           document_id: string
           id?: string
           kategorier?: string[] | null
+          local_files?: Json | null
           markdown_url?: string | null
           publicerad_datum?: string | null
           titel?: string | null
@@ -1339,6 +1464,7 @@ export type Database = {
           document_id?: string
           id?: string
           kategorier?: string[] | null
+          local_files?: Json | null
           markdown_url?: string | null
           publicerad_datum?: string | null
           titel?: string | null
@@ -1434,6 +1560,8 @@ export type Database = {
           dokument_url_html: string | null
           dokument_url_text: string | null
           id: string
+          local_html_url: string | null
+          local_pdf_url: string | null
           nummer: string | null
           organ: string | null
           rm: string | null
@@ -1454,6 +1582,8 @@ export type Database = {
           dokument_url_html?: string | null
           dokument_url_text?: string | null
           id?: string
+          local_html_url?: string | null
+          local_pdf_url?: string | null
           nummer?: string | null
           organ?: string | null
           rm?: string | null
@@ -1474,6 +1604,8 @@ export type Database = {
           dokument_url_html?: string | null
           dokument_url_text?: string | null
           id?: string
+          local_html_url?: string | null
+          local_pdf_url?: string | null
           nummer?: string | null
           organ?: string | null
           rm?: string | null
@@ -1495,6 +1627,7 @@ export type Database = {
           fornamn: string | null
           id: string
           intressent_id: string
+          local_bild_url: string | null
           parti: string | null
           status: string | null
           tilltalsnamn: string | null
@@ -1508,6 +1641,7 @@ export type Database = {
           fornamn?: string | null
           id?: string
           intressent_id: string
+          local_bild_url?: string | null
           parti?: string | null
           status?: string | null
           tilltalsnamn?: string | null
@@ -1521,6 +1655,7 @@ export type Database = {
           fornamn?: string | null
           id?: string
           intressent_id?: string
+          local_bild_url?: string | null
           parti?: string | null
           status?: string | null
           tilltalsnamn?: string | null

@@ -5,17 +5,64 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 }
 
-interface G0vseDocument {
-  document_id: string;
-  titel?: string;
-  publicerad_datum?: string;
-  uppdaterad_datum?: string;
-  typ?: string;
-  kategorier?: string[];
-  avsandare?: string;
-  beteckningsnummer?: string;
-  url?: string;
-  markdown_url?: string;
+// Hjälpfunktion för att ladda ner och spara filer till Storage
+async function downloadAndStoreFile(
+  supabaseClient: any,
+  fileUrl: string,
+  bucket: string,
+  path: string
+): Promise<string | null> {
+  try {
+    console.log(`Laddar ner fil från: ${fileUrl}`);
+    const response = await fetch(fileUrl);
+    if (!response.ok) {
+      console.error(`Kunde inte ladda ner fil: ${response.status}`);
+      return null;
+    }
+    
+    const blob = await response.blob();
+    const arrayBuffer = await blob.arrayBuffer();
+    
+    // Spara till Supabase Storage
+    const { data, error } = await supabaseClient.storage
+      .from(bucket)
+      .upload(path, arrayBuffer, {
+        contentType: blob.type || 'application/octet-stream',
+        upsert: true
+      });
+    
+    if (error) {
+      console.error('Storage upload fel:', error);
+      return null;
+    }
+    
+    // Returnera publik URL
+    const { data: { publicUrl } } = supabaseClient.storage
+      .from(bucket)
+      .getPublicUrl(path);
+    
+    console.log(`Fil sparad: ${publicUrl}`);
+    return publicUrl;
+  } catch (err) {
+    console.error('Fil-nedladdningsfel:', err);
+    return null;
+  }
+}
+
+// Uppdatera progress
+async function updateProgress(
+  supabaseClient: any,
+  dataType: string,
+  updates: any
+) {
+  await supabaseClient
+    .from('data_fetch_progress')
+    .upsert({
+      source: 'regeringskansliet',
+      data_type: dataType,
+      ...updates,
+      last_fetched_at: new Date().toISOString()
+    }, { onConflict: 'source,data_type' });
 }
 
 Deno.serve(async (req) => {
@@ -77,6 +124,13 @@ Deno.serve(async (req) => {
     const tableName = endpoint.table;
 
     console.log(`Anropar: ${apiUrl}`);
+    
+    await updateProgress(supabaseClient, dataType, {
+      current_page: 1,
+      total_pages: 1,
+      items_fetched: 0,
+      status: 'in_progress'
+    });
 
     // Hämta data från g0v.se API
     const response = await fetch(apiUrl);
@@ -90,13 +144,17 @@ Deno.serve(async (req) => {
 
     let insertedCount = 0;
     let errors = 0;
+    let totalItems = 0;
 
     if (dataType === 'pressmeddelanden' && Array.isArray(data)) {
       const items = data;
+      totalItems = items.length;
+      
+      await updateProgress(supabaseClient, dataType, { total_items: totalItems });
       
       for (const item of items) {
         try {
-          const pressData = {
+          const pressData: any = {
             document_id: item.id || item.url,
             titel: item.title,
             publicerad_datum: item.published,
@@ -104,6 +162,31 @@ Deno.serve(async (req) => {
             url: item.url,
             innehall: item.summary || item.description,
           };
+
+          // Ladda ner bilagor om de finns
+          if (item.attachments && Array.isArray(item.attachments)) {
+            const localBilagor = [];
+            for (const attachment of item.attachments) {
+              const fileName = attachment.url.split('/').pop() || `bilaga_${Date.now()}.pdf`;
+              const filePath = `pressmeddelanden/${item.id || Date.now()}/${fileName}`;
+              const localUrl = await downloadAndStoreFile(
+                supabaseClient,
+                attachment.url,
+                'regeringskansliet-files',
+                filePath
+              );
+              if (localUrl) {
+                localBilagor.push({
+                  original_url: attachment.url,
+                  local_url: localUrl,
+                  filename: fileName
+                });
+              }
+            }
+            if (localBilagor.length > 0) {
+              pressData.local_bilagor = localBilagor;
+            }
+          }
 
           const { error } = await supabaseClient
             .from(tableName)
@@ -122,10 +205,13 @@ Deno.serve(async (req) => {
       }
     } else if (dataType === 'propositioner' && Array.isArray(data)) {
       const items = data;
+      totalItems = items.length;
+      
+      await updateProgress(supabaseClient, dataType, { total_items: totalItems });
       
       for (const item of items) {
         try {
-          const propData = {
+          const propData: any = {
             document_id: item.id || item.url,
             titel: item.title,
             publicerad_datum: item.published,
@@ -134,6 +220,21 @@ Deno.serve(async (req) => {
             url: item.url,
             pdf_url: item.attachments?.[0]?.url,
           };
+
+          // Ladda ner PDF om det finns
+          if (propData.pdf_url) {
+            const fileName = `${item.identifier || item.id || Date.now()}.pdf`;
+            const filePath = `propositioner/${fileName}`;
+            const localPdfUrl = await downloadAndStoreFile(
+              supabaseClient,
+              propData.pdf_url,
+              'regeringskansliet-files',
+              filePath
+            );
+            if (localPdfUrl) {
+              propData.local_pdf_url = localPdfUrl;
+            }
+          }
 
           const { error } = await supabaseClient
             .from(tableName)
@@ -152,7 +253,12 @@ Deno.serve(async (req) => {
       }
     } else if (dataType === 'kategorier' && typeof data === 'object') {
       // Kategorier kommer som objekt med koder som nycklar
-      for (const [kod, namn] of Object.entries(data)) {
+      const entries = Object.entries(data);
+      totalItems = entries.length;
+      
+      await updateProgress(supabaseClient, dataType, { total_items: totalItems });
+      
+      for (const [kod, namn] of entries) {
         try {
           const kategoriData = {
             kod: kod,
@@ -174,12 +280,16 @@ Deno.serve(async (req) => {
           errors++;
         }
       }
-    } else if (dataType === 'dokument' && Array.isArray(data)) {
+    } else if (Array.isArray(data)) {
+      // Hantera alla andra dokumenttyper med standardformat
       const items = data;
+      totalItems = items.length;
+      
+      await updateProgress(supabaseClient, dataType, { total_items: totalItems });
       
       for (const item of items) {
         try {
-          const docData = {
+          const docData: any = {
             document_id: item.id || item.url,
             titel: item.title,
             publicerad_datum: item.published,
@@ -192,37 +302,30 @@ Deno.serve(async (req) => {
             markdown_url: item.url ? item.url.replace('regeringen.se', 'g0v.se').replace(/\/$/, '.md') : null,
           };
 
-          const { error } = await supabaseClient
-            .from(tableName)
-            .upsert(docData, { onConflict: 'document_id' });
-
-          if (error) {
-            console.error('Fel vid insättning:', error);
-            errors++;
-          } else {
-            insertedCount++;
+          // Ladda ner bilagor om de finns
+          if (item.attachments && Array.isArray(item.attachments)) {
+            const localFiles = [];
+            for (const attachment of item.attachments) {
+              const fileName = attachment.url.split('/').pop() || `file_${Date.now()}`;
+              const filePath = `${dataType}/${item.id || Date.now()}/${fileName}`;
+              const localUrl = await downloadAndStoreFile(
+                supabaseClient,
+                attachment.url,
+                'regeringskansliet-files',
+                filePath
+              );
+              if (localUrl) {
+                localFiles.push({
+                  original_url: attachment.url,
+                  local_url: localUrl,
+                  filename: fileName
+                });
+              }
+            }
+            if (localFiles.length > 0) {
+              docData.local_files = localFiles;
+            }
           }
-        } catch (err) {
-          console.error('Fel vid bearbetning:', err);
-          errors++;
-        }
-      }
-    } else if (Array.isArray(data)) {
-      // Hantera alla andra dokumenttyper med standardformat
-      for (const item of data) {
-        try {
-          const docData = {
-            document_id: item.id || item.url,
-            titel: item.title,
-            publicerad_datum: item.published,
-            uppdaterad_datum: item.updated,
-            typ: item.type,
-            kategorier: item.categories,
-            avsandare: item.sender,
-            beteckningsnummer: item.identifier,
-            url: item.url,
-            markdown_url: item.url ? item.url.replace('regeringen.se', 'g0v.se').replace(/\/$/, '.md') : null,
-          };
 
           const { error } = await supabaseClient
             .from(tableName)
@@ -240,6 +343,12 @@ Deno.serve(async (req) => {
         }
       }
     }
+
+    // Uppdatera progress till completed
+    await updateProgress(supabaseClient, dataType, {
+      items_fetched: insertedCount,
+      status: 'completed'
+    });
 
     // Logga API-anropet
     await supabaseClient.from('regeringskansliet_api_log').insert({

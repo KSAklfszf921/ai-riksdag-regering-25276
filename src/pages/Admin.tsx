@@ -2,7 +2,7 @@ import { Link, Navigate } from "react-router-dom";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Shield, Database, Download, Settings, ArrowLeft } from "lucide-react";
+import { Shield, Database, Download, Settings, ArrowLeft, BarChart3 } from "lucide-react";
 import { useIsAdmin } from "@/hooks/useIsAdmin";
 import { DataProcessControl } from "@/components/admin/DataProcessControl";
 import { FileQueueControl } from "@/components/admin/FileQueueControl";
@@ -12,6 +12,7 @@ import { SystemHealth } from "@/components/admin/SystemHealth";
 import { Skeleton } from "@/components/ui/skeleton";
 import RiksdagenApiInfo from "@/components/admin/RiksdagenApiInfo";
 import RiksdagenDataFetchConfig from "@/components/admin/RiksdagenDataFetchConfig";
+import { DatabaseStats } from "@/components/admin/DatabaseStats";
 
 const Admin = () => {
   const { isAdmin, isLoading } = useIsAdmin();
@@ -53,8 +54,12 @@ const Admin = () => {
           </div>
         </div>
 
-        <Tabs defaultValue="riksdagen" className="space-y-6">
-          <TabsList className="grid w-full grid-cols-4">
+        <Tabs defaultValue="overview" className="space-y-6">
+          <TabsList className="grid w-full grid-cols-5">
+            <TabsTrigger value="overview">
+              <BarChart3 className="h-4 w-4 mr-2" />
+              Översikt
+            </TabsTrigger>
             <TabsTrigger value="riksdagen">
               <Database className="h-4 w-4 mr-2" />
               Riksdagen
@@ -65,13 +70,18 @@ const Admin = () => {
             </TabsTrigger>
             <TabsTrigger value="files">
               <Download className="h-4 w-4 mr-2" />
-              Filkö
+              Filer & Storage
             </TabsTrigger>
             <TabsTrigger value="settings">
               <Settings className="h-4 w-4 mr-2" />
               Inställningar
             </TabsTrigger>
           </TabsList>
+
+          <TabsContent value="overview" className="space-y-4">
+            <SystemHealth />
+            <DatabaseStats />
+          </TabsContent>
 
           <TabsContent value="riksdagen" className="space-y-4">
             <RiksdagenApiInfo />

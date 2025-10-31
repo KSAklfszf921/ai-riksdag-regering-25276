@@ -47,6 +47,8 @@ export type Database = {
           id: string
           items_fetched: number | null
           last_fetched_at: string | null
+          next_page_url: string | null
+          pages_processed: number | null
           source: string
           status: string | null
           total_items: number | null
@@ -61,6 +63,8 @@ export type Database = {
           id?: string
           items_fetched?: number | null
           last_fetched_at?: string | null
+          next_page_url?: string | null
+          pages_processed?: number | null
           source: string
           status?: string | null
           total_items?: number | null
@@ -75,6 +79,8 @@ export type Database = {
           id?: string
           items_fetched?: number | null
           last_fetched_at?: string | null
+          next_page_url?: string | null
+          pages_processed?: number | null
           source?: string
           status?: string | null
           total_items?: number | null
@@ -1936,6 +1942,16 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      get_table_sizes: {
+        Args: never
+        Returns: {
+          last_updated: string
+          row_count: number
+          size_bytes: number
+          table_name: string
+          total_size: string
+        }[]
+      }
       get_user_roles_with_emails: {
         Args: never
         Returns: {

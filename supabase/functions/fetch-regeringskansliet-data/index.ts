@@ -106,7 +106,22 @@ Deno.serve(async (req) => {
       );
     }
 
-    const { dataType } = await req.json();
+    // Validate input
+    const requestBody = await req.json();
+    if (!requestBody || typeof requestBody.dataType !== 'string') {
+      return new Response(
+        JSON.stringify({ error: 'Invalid request: dataType required' }),
+        { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+
+    const dataType = requestBody.dataType.trim();
+    if (dataType.length === 0 || dataType.length > 100) {
+      return new Response(
+        JSON.stringify({ error: 'Invalid dataType length' }),
+        { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
 
     console.log(`Hämtar ${dataType} data från g0v.se API...`);
 
@@ -449,14 +464,20 @@ Deno.serve(async (req) => {
     );
 
   } catch (error) {
-    console.error('Fel:', error);
+    // Log detailed error for debugging
+    console.error('Edge function error:', {
+      error: error instanceof Error ? error.message : String(error),
+      stack: error instanceof Error ? error.stack : undefined,
+      timestamp: new Date().toISOString()
+    });
     
-    const errorMessage = error instanceof Error ? error.message : 'Okänt fel uppstod';
-    
+    // Return generic error to client
+    const requestId = crypto.randomUUID();
     return new Response(
       JSON.stringify({ 
-        success: false, 
-        error: errorMessage
+        success: false,
+        error: 'An error occurred processing your request',
+        requestId: requestId
       }),
       { 
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },

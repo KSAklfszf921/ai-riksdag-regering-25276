@@ -222,6 +222,44 @@ Deno.serve(async (req) => {
     let totalPages = 0;
     let totalItems = 0;
 
+    // Helper function to fetch with retries
+    const fetchWithRetry = async (url: string, maxRetries = 3): Promise<Response> => {
+      for (let attempt = 1; attempt <= maxRetries; attempt++) {
+        try {
+          console.log(`Försök ${attempt}/${maxRetries} för ${url}`);
+          
+          const response = await fetch(url, {
+            headers: {
+              'User-Agent': 'Mozilla/5.0 (compatible; SvensktPolitikArkiv/1.0)',
+              'Accept': 'application/json, text/xml, */*',
+              'Accept-Language': 'sv-SE,sv;q=0.9,en;q=0.8',
+            },
+            signal: AbortSignal.timeout(30000), // 30 second timeout
+          });
+          
+          if (!response.ok) {
+            throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+          }
+          
+          return response;
+        } catch (error) {
+          const isLastAttempt = attempt === maxRetries;
+          const waitTime = Math.min(1000 * Math.pow(2, attempt - 1), 10000); // Exponential backoff, max 10s
+          const errorMessage = error instanceof Error ? error.message : String(error);
+          
+          console.error(`Försök ${attempt} misslyckades:`, errorMessage);
+          
+          if (isLastAttempt) {
+            throw new Error(`Kunde inte hämta data efter ${maxRetries} försök: ${errorMessage}`);
+          }
+          
+          console.log(`Väntar ${waitTime}ms innan nästa försök...`);
+          await new Promise(resolve => setTimeout(resolve, waitTime));
+        }
+      }
+      throw new Error('Unexpected error in fetchWithRetry');
+    };
+
     // Hämta alla sidor om paginering är aktiverad
     while (nextPageUrl && (maxPages === null || currentPage <= maxPages)) {
       // Kontrollera stoppsignal
@@ -236,11 +274,14 @@ Deno.serve(async (req) => {
       
       console.log(`Hämtar sida ${currentPage}...`);
       
-      const response: Response = await fetch(nextPageUrl);
-      
-      if (!response.ok) {
-        throw new Error(`Riksdagens API svarade med status: ${response.status}`);
+      // Add delay between requests to avoid rate limiting (except first page)
+      if (currentPage > 1) {
+        const delay = 1000; // 1 second between requests
+        console.log(`Väntar ${delay}ms mellan förfrågningar...`);
+        await new Promise(resolve => setTimeout(resolve, delay));
       }
+      
+      const response: Response = await fetchWithRetry(nextPageUrl);
 
       // Anföranden - parse XML med deno-dom
       let data: any;

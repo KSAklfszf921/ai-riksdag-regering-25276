@@ -196,12 +196,46 @@ Deno.serve(async (req) => {
       status: 'in_progress'
     });
 
+    // Helper function to fetch with retries
+    const fetchWithRetry = async (url: string, maxRetries = 3): Promise<Response> => {
+      for (let attempt = 1; attempt <= maxRetries; attempt++) {
+        try {
+          console.log(`Försök ${attempt}/${maxRetries} för ${url}`);
+          
+          const response = await fetch(url, {
+            headers: {
+              'User-Agent': 'Mozilla/5.0 (compatible; SvensktPolitikArkiv/1.0)',
+              'Accept': 'application/json',
+              'Accept-Language': 'sv-SE,sv;q=0.9,en;q=0.8',
+            },
+            signal: AbortSignal.timeout(30000), // 30 second timeout
+          });
+          
+          if (!response.ok) {
+            throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+          }
+          
+          return response;
+        } catch (error) {
+          const isLastAttempt = attempt === maxRetries;
+          const waitTime = Math.min(1000 * Math.pow(2, attempt - 1), 10000); // Exponential backoff, max 10s
+          const errorMessage = error instanceof Error ? error.message : String(error);
+          
+          console.error(`Försök ${attempt} misslyckades:`, errorMessage);
+          
+          if (isLastAttempt) {
+            throw new Error(`Kunde inte hämta data efter ${maxRetries} försök: ${errorMessage}`);
+          }
+          
+          console.log(`Väntar ${waitTime}ms innan nästa försök...`);
+          await new Promise(resolve => setTimeout(resolve, waitTime));
+        }
+      }
+      throw new Error('Unexpected error in fetchWithRetry');
+    };
+
     // Hämta data från g0v.se API
-    const response = await fetch(apiUrl);
-    
-    if (!response.ok) {
-      throw new Error(`g0v.se API svarade med status: ${response.status}`);
-    }
+    const response = await fetchWithRetry(apiUrl);
 
     const data = await response.json();
     console.log('Data hämtad från g0v.se API');

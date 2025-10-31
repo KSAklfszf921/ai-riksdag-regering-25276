@@ -7,9 +7,39 @@ const corsHeaders = {
 
 async function downloadAndStoreFile(supabaseClient: any, fileUrl: string, bucket: string, path: string) {
   try {
-    const response = await fetch(fileUrl);
-    if (!response.ok) return null;
+    // Helper function to fetch with retries
+    const fetchWithRetry = async (url: string, maxRetries = 3): Promise<Response> => {
+      for (let attempt = 1; attempt <= maxRetries; attempt++) {
+        try {
+          const response = await fetch(url, {
+            headers: {
+              'User-Agent': 'Mozilla/5.0 (compatible; SvensktPolitikArkiv/1.0)',
+              'Accept': '*/*',
+            },
+            signal: AbortSignal.timeout(30000), // 30 second timeout
+          });
+          
+          if (!response.ok) {
+            throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+          }
+          
+          return response;
+        } catch (error) {
+          const isLastAttempt = attempt === maxRetries;
+          const waitTime = Math.min(1000 * Math.pow(2, attempt - 1), 10000); // Exponential backoff
+          const errorMessage = error instanceof Error ? error.message : String(error);
+          
+          if (isLastAttempt) {
+            throw new Error(`Download failed after ${maxRetries} attempts: ${errorMessage}`);
+          }
+          
+          await new Promise(resolve => setTimeout(resolve, waitTime));
+        }
+      }
+      throw new Error('Unexpected error in fetchWithRetry');
+    };
 
+    const response = await fetchWithRetry(fileUrl);
     const arrayBuffer = await response.arrayBuffer();
     const { data, error } = await supabaseClient.storage
       .from(bucket)

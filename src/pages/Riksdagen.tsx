@@ -6,6 +6,7 @@ import { supabase } from "@/integrations/supabase/client";
 import StatsCard from "@/components/StatsCard";
 import DataFetchButton from "@/components/DataFetchButton";
 import ProgressTracker from "@/components/ProgressTracker";
+import FileQueueManager from "@/components/FileQueueManager";
 import { Skeleton } from "@/components/ui/skeleton";
 
 const Riksdagen = () => {
@@ -86,6 +87,7 @@ const Riksdagen = () => {
 
         {/* Statistics */}
         <ProgressTracker source="riksdagen" />
+        <FileQueueManager />
         
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-12">
           {statsLoading ? (

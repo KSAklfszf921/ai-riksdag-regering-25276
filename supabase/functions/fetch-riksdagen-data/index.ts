@@ -1,4 +1,5 @@
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.78.0'
+import { DOMParser } from 'https://deno.land/x/deno_dom@v0.1.38/deno-dom-wasm.ts'
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -59,48 +60,44 @@ interface VoteringData {
   votering_datum?: string;
 }
 
-// Hjälpfunktion för att ladda ner och spara filer till Storage
-async function downloadAndStoreFile(
+// Lägg till fil i nedladdningskö istället för att ladda ner direkt
+async function enqueueFileDownload(
   supabaseClient: any,
   fileUrl: string,
   bucket: string,
-  path: string
-): Promise<string | null> {
+  path: string,
+  tableName: string,
+  recordId: string,
+  columnName: string
+) {
   try {
-    console.log(`Laddar ner fil från: ${fileUrl}`);
-    const response = await fetch(fileUrl);
-    if (!response.ok) {
-      console.error(`Kunde inte ladda ner fil: ${response.status}`);
-      return null;
-    }
-    
-    const blob = await response.blob();
-    const arrayBuffer = await blob.arrayBuffer();
-    
-    // Spara till Supabase Storage
-    const { data, error } = await supabaseClient.storage
-      .from(bucket)
-      .upload(path, arrayBuffer, {
-        contentType: blob.type || 'application/octet-stream',
-        upsert: true
+    await supabaseClient
+      .from('file_download_queue')
+      .insert({
+        file_url: fileUrl,
+        bucket,
+        storage_path: path,
+        table_name: tableName,
+        record_id: recordId,
+        column_name: columnName,
+        status: 'pending'
       });
-    
-    if (error) {
-      console.error('Storage upload fel:', error);
-      return null;
-    }
-    
-    // Returnera publik URL
-    const { data: { publicUrl } } = supabaseClient.storage
-      .from(bucket)
-      .getPublicUrl(path);
-    
-    console.log(`Fil sparad: ${publicUrl}`);
-    return publicUrl;
+    console.log(`Fil tillagd i kö: ${path}`);
   } catch (err) {
-    console.error('Fil-nedladdningsfel:', err);
-    return null;
+    console.error('Fel vid tillägg i filkö:', err);
   }
+}
+
+// Kontrollera om hämtning ska stoppas
+async function shouldStop(supabaseClient: any, dataType: string): Promise<boolean> {
+  const { data } = await supabaseClient
+    .from('data_fetch_control')
+    .select('should_stop')
+    .eq('source', 'riksdagen')
+    .eq('data_type', dataType)
+    .maybeSingle();
+  
+  return data?.should_stop === true;
 }
 
 // Uppdatera progress
@@ -165,7 +162,15 @@ Deno.serve(async (req) => {
 
     // Hämta alla sidor om paginering är aktiverad
     while (nextPageUrl && (maxPages === null || currentPage <= maxPages)) {
-      console.log(`Hämtar sida ${currentPage}...`);
+      // Kontrollera stoppsignal
+      if (await shouldStop(supabaseClient, dataType)) {
+        console.log('Stoppsignal mottagen, avbryter hämtning');
+        await updateProgress(supabaseClient, dataType, {
+          status: 'stopped',
+          error_message: 'Manuellt stoppad av användare'
+        });
+        break;
+      }
       
       console.log(`Hämtar sida ${currentPage}...`);
       
@@ -175,15 +180,58 @@ Deno.serve(async (req) => {
         throw new Error(`Riksdagens API svarade med status: ${response.status}`);
       }
 
-      // Anföranden returnerar XML trots att vi ber om JSON
+      // Anföranden - parse XML med deno-dom
       let data: any;
       if (dataType === 'anforanden') {
         const xmlText = await response.text();
-        // Enkelt sätt: skippa XML-parsing och använd JSON-endpoint istället
-        console.log('Anföranden-data mottagen (XML format, skippar för nu)');
-        // Sätter tom data för att undvika fel
-        data = { anforandelista: { anforande: [] } };
-        nextPageUrl = null; // Stoppa loop för anföranden tills vi fixar XML-parsing
+        console.log('Anföranden-data mottagen (XML format), parsar...');
+        
+        try {
+          const doc = new DOMParser().parseFromString(xmlText, 'text/xml');
+          if (!doc) throw new Error('Kunde inte parsa XML');
+          
+          const anfElements = doc.querySelectorAll('anforande');
+          const anforanden = [];
+          
+          for (const anf of anfElements) {
+            const element = anf as any; // Cast to access querySelector
+            anforanden.push({
+              anforande_id: element.querySelector('anforande_id')?.textContent || '',
+              intressent_id: element.querySelector('intressent_id')?.textContent,
+              dokument_id: element.querySelector('dokument_id')?.textContent,
+              dok_id: element.querySelector('dok_id')?.textContent,
+              debatt: element.querySelector('debatt')?.textContent,
+              anforandenummer: element.querySelector('anforandenummer')?.textContent,
+              anforandetext: element.querySelector('anforandetext')?.textContent,
+              datum: element.querySelector('datum')?.textContent,
+              rubrik: element.querySelector('rubrik')?.textContent,
+              avsnittsrubrik: element.querySelector('avsnittsrubrik')?.textContent,
+              parti: element.querySelector('parti')?.textContent,
+              namn: element.querySelector('namn')?.textContent,
+              talare: element.querySelector('talare')?.textContent,
+            });
+          }
+          
+          // Simulera JSON-struktur
+          const sidor = doc.querySelector('anforandelista')?.getAttribute('sidor');
+          const traffar = doc.querySelector('anforandelista')?.getAttribute('traffar');
+          const nastaSida = doc.querySelector('anforandelista')?.getAttribute('nasta_sida');
+          
+          data = {
+            anforandelista: {
+              '@sidor': sidor,
+              '@traffar': traffar,
+              '@nasta_sida': nastaSida,
+              anforande: anforanden
+            }
+          };
+          
+          console.log(`Parsade ${anforanden.length} anföranden från XML`);
+        } catch (err) {
+          console.error('XML-parsing fel:', err);
+          data = { anforandelista: { anforande: [] } };
+          nextPageUrl = null;
+        }
       } else {
         data = await response.json();
       }
@@ -241,24 +289,28 @@ Deno.serve(async (req) => {
               dokument_url_html: dok.dokument_url_html,
             };
 
-            // Ladda ner PDF om det finns
-            if (dok.dokument_url_text) {
+            // Lägg till PDF i nedladdningskö istället för att ladda ner direkt
+            const { data: insertedDoc, error: insertError } = await supabaseClient
+              .from(tableName)
+              .upsert(dokumentData, { onConflict: 'dok_id' })
+              .select('id')
+              .single();
+
+            if (insertedDoc && dok.dokument_url_text) {
               const pdfPath = `dokument/${dok.dok_id || dok.id}.pdf`;
-              const localPdfUrl = await downloadAndStoreFile(
+              await enqueueFileDownload(
                 supabaseClient,
                 dok.dokument_url_text,
                 'riksdagen-images',
-                pdfPath
+                pdfPath,
+                tableName,
+                insertedDoc.id,
+                'local_pdf_url'
               );
-              if (localPdfUrl) dokumentData.local_pdf_url = localPdfUrl;
             }
 
-            const { error } = await supabaseClient
-              .from(tableName)
-              .upsert(dokumentData, { onConflict: 'dok_id' });
-
-            if (error) {
-              console.error('Fel vid insättning:', error);
+            if (insertError) {
+              console.error('Fel vid insättning:', insertError);
               errorsThisPage++;
             } else {
               insertedThisPage++;
@@ -290,24 +342,28 @@ Deno.serve(async (req) => {
               bild_url: person.bild_url_192 || person.bild_url_80,
             };
 
-            // Ladda ner bild om det finns
-            if (ledamotData.bild_url) {
+            // Lägg till bild i nedladdningskö istället för att ladda ner direkt
+            const { data: insertedLedamot, error: insertError } = await supabaseClient
+              .from(tableName)
+              .upsert(ledamotData, { onConflict: 'intressent_id' })
+              .select('id')
+              .single();
+
+            if (insertedLedamot && ledamotData.bild_url) {
               const bildPath = `ledamoter/${person.intressent_id}.jpg`;
-              const localBildUrl = await downloadAndStoreFile(
+              await enqueueFileDownload(
                 supabaseClient,
                 ledamotData.bild_url,
                 'riksdagen-images',
-                bildPath
+                bildPath,
+                tableName,
+                insertedLedamot.id,
+                'local_bild_url'
               );
-              if (localBildUrl) ledamotData.local_bild_url = localBildUrl;
             }
 
-            const { error } = await supabaseClient
-              .from(tableName)
-              .upsert(ledamotData, { onConflict: 'intressent_id' });
-
-            if (error) {
-              console.error('Fel vid insättning av ledamot:', error);
+            if (insertError) {
+              console.error('Fel vid insättning av ledamot:', insertError);
               errorsThisPage++;
             } else {
               insertedThisPage++;

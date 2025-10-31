@@ -2,6 +2,7 @@ import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
+import { Badge } from "@/components/ui/badge";
 import { Clock, CheckCircle2, AlertCircle, Loader2 } from "lucide-react";
 import { formatDistanceToNow } from "date-fns";
 import { sv } from "date-fns/locale";
@@ -23,8 +24,26 @@ const ProgressTracker = ({ source }: ProgressTrackerProps) => {
       if (error) throw error;
       return data;
     },
-    refetchInterval: 5000, // Uppdatera var 5:e sekund
+    refetchInterval: 5000,
   });
+
+  const { data: controlData } = useQuery({
+    queryKey: ['fetch-control', source],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('data_fetch_control')
+        .select('*')
+        .eq('source', source);
+      
+      if (error) throw error;
+      return data || [];
+    },
+    refetchInterval: 5000,
+  });
+
+  const getControlStatus = (dataType: string) => {
+    return controlData?.find((c: any) => c.data_type === dataType);
+  };
 
   if (isLoading || !progressItems || progressItems.length === 0) {
     return null;
@@ -36,11 +55,16 @@ const ProgressTracker = ({ source }: ProgressTrackerProps) => {
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
         {progressItems.map((item) => {
           const progress = item.total_items ? (item.items_fetched / item.total_items) * 100 : 0;
+          const control = getControlStatus(item.data_type);
+          const isStopped = item.status === 'stopped' || control?.should_stop === true;
+          
           const statusIcon = item.status === 'completed' ? CheckCircle2 : 
                             item.status === 'failed' ? AlertCircle :
+                            isStopped ? AlertCircle :
                             Loader2;
           const statusColor = item.status === 'completed' ? 'text-green-600' :
                              item.status === 'failed' ? 'text-red-600' :
+                             isStopped ? 'text-orange-600' :
                              'text-blue-600';
           
           return (
@@ -48,9 +72,16 @@ const ProgressTracker = ({ source }: ProgressTrackerProps) => {
               <CardHeader className="pb-3">
                 <div className="flex items-center justify-between">
                   <CardTitle className="text-base">{item.data_type}</CardTitle>
-                  {item.status === 'completed' && <CheckCircle2 className={`h-4 w-4 ${statusColor}`} />}
-                  {item.status === 'failed' && <AlertCircle className={`h-4 w-4 ${statusColor}`} />}
-                  {item.status === 'in_progress' && <Loader2 className={`h-4 w-4 ${statusColor} animate-spin`} />}
+                  <div className="flex items-center gap-2">
+                    {isStopped && (
+                      <Badge variant="outline" className="text-orange-600 border-orange-600">
+                        STOPPAD
+                      </Badge>
+                    )}
+                    {item.status === 'completed' && <CheckCircle2 className={`h-4 w-4 ${statusColor}`} />}
+                    {item.status === 'failed' && <AlertCircle className={`h-4 w-4 ${statusColor}`} />}
+                    {item.status === 'in_progress' && !isStopped && <Loader2 className={`h-4 w-4 ${statusColor} animate-spin`} />}
+                  </div>
                 </div>
               </CardHeader>
               <CardContent>

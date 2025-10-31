@@ -7,6 +7,7 @@ import { Badge } from "@/components/ui/badge";
 import { Calendar, FileText, ExternalLink } from "lucide-react";
 import { formatDistanceToNow } from "date-fns";
 import { sv } from "date-fns/locale";
+import EmptyState from "@/components/EmptyState";
 
 const Dokument = () => {
   const { data: dokument, isLoading } = useQuery({
@@ -52,6 +53,11 @@ const Dokument = () => {
               </Card>
             ))}
           </div>
+        ) : dokument && dokument.length === 0 ? (
+          <EmptyState
+            message="Inga dokument hittades"
+            suggestion="Använd 'Hämta data'-knappen på Riksdagen-sidan för att ladda ned dokument från Riksdagens API"
+          />
         ) : (
           <div className="space-y-4">
             {dokument?.map((dok) => (

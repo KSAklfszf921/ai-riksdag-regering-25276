@@ -8,6 +8,7 @@ import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Calendar, User } from "lucide-react";
 import { formatDistanceToNow } from "date-fns";
 import { sv } from "date-fns/locale";
+import EmptyState from "@/components/EmptyState";
 
 const Anforanden = () => {
   const { data: anforanden, isLoading } = useQuery({
@@ -64,6 +65,11 @@ const Anforanden = () => {
               </Card>
             ))}
           </div>
+        ) : anforanden && anforanden.length === 0 ? (
+          <EmptyState
+            message="Inga anföranden hittades"
+            suggestion="Anförande-API:et från Riksdagen är för tillfället inte tillgängligt. Prova att hämta data för dokument, ledamöter och voteringar istället."
+          />
         ) : (
           <div className="space-y-4">
             {anforanden?.map((anf) => (

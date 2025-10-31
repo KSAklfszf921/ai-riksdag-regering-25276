@@ -211,7 +211,7 @@ Deno.serve(async (req) => {
       tom: requestBody.tom || '',             // Till datum
       ts: requestBody.ts || '',               // Tidsperiod
       doktyp: requestBody.doktyp || '',       // Dokumenttyp
-      sz: requestBody.sz || '200',            // Antal resultat per sida (default 200)
+      sz: requestBody.sz || '500',            // Antal resultat per sida (default 500, max för Riksdagens API)
     };
 
     console.log(`Hämtar ${dataType} data från Riksdagens API (paginering: ${paginate}, original: ${rawDataType})...`);
@@ -279,7 +279,7 @@ Deno.serve(async (req) => {
     let totalItems = 0;
     
     // Limit pages per execution to prevent resource exhaustion
-    const MAX_PAGES_PER_EXECUTION = 5;  // Process max 5 pages (1000 items) per execution
+    const MAX_PAGES_PER_EXECUTION = 20;  // Process max 20 pages (10,000 items with sz=500) per execution
     let pagesProcessedThisExecution = 0;
 
     // Helper function to fetch with retries
@@ -475,8 +475,14 @@ Deno.serve(async (req) => {
           }
         }
         
-        // Hämta nästa sida
+        // Hämta nästa sida - fallback om @nasta_sida saknas men fler sidor finns
         nextPageUrl = paginate ? data.dokumentlista['@nasta_sida'] : null;
+        if (!nextPageUrl && paginate && currentPage < totalPages) {
+          console.log(`@nasta_sida saknas, genererar URL manuellt för sida ${currentPage + 1}`);
+          const url = new URL(apiUrl);
+          url.searchParams.set('p', String(currentPage + 1));
+          nextPageUrl = url.toString();
+        }
         
       } else if (dataType === 'ledamoter' && data.personlista?.person) {
         const personer = Array.isArray(data.personlista.person) 
@@ -574,8 +580,14 @@ Deno.serve(async (req) => {
         
         console.log(`Page complete: ${insertedThisPage} inserted, ${errorsThisPage} errors`);
         
-        // Hämta nästa sida
+        // Hämta nästa sida - fallback om @nasta_sida saknas men fler sidor finns
         nextPageUrl = paginate ? data.anforandelista['@nasta_sida'] : null;
+        if (!nextPageUrl && paginate && currentPage < totalPages) {
+          console.log(`@nasta_sida saknas, genererar URL manuellt för sida ${currentPage + 1}`);
+          const url = new URL(apiUrl);
+          url.searchParams.set('p', String(currentPage + 1));
+          nextPageUrl = url.toString();
+        }
         
       } else if (dataType === 'voteringar' && data.voteringlista?.votering) {
         const voteringar = Array.isArray(data.voteringlista.votering) 
@@ -609,8 +621,14 @@ Deno.serve(async (req) => {
           }
         }
         
-        // Hämta nästa sida
+        // Hämta nästa sida - fallback om @nasta_sida saknas men fler sidor finns
         nextPageUrl = paginate ? data.voteringlista['@nasta_sida'] : null;
+        if (!nextPageUrl && paginate && currentPage < totalPages) {
+          console.log(`@nasta_sida saknas, genererar URL manuellt för sida ${currentPage + 1}`);
+          const url = new URL(apiUrl);
+          url.searchParams.set('p', String(currentPage + 1));
+          nextPageUrl = url.toString();
+        }
       }
 
       totalInserted += insertedThisPage;
@@ -618,10 +636,12 @@ Deno.serve(async (req) => {
 
       console.log(`Sida ${currentPage} klar: ${insertedThisPage} infogade, ${errorsThisPage} fel`);
       
-      // Uppdatera progress
+      // Uppdatera progress med next_page_url och pages_processed
       await updateProgress(supabaseClient, dataType, {
         current_page: currentPage,
         items_fetched: totalInserted,
+        pages_processed: pagesProcessedThisExecution,
+        next_page_url: nextPageUrl,
         status: nextPageUrl ? 'in_progress' : 'completed'
       });
 
@@ -641,12 +661,16 @@ Deno.serve(async (req) => {
     
     // Check if we hit the batch limit and more pages remain
     const hasMorePages = nextPageUrl !== null && pagesProcessedThisExecution >= MAX_PAGES_PER_EXECUTION;
-    const finalStatus = hasMorePages ? 'in_progress' : 'completed';
+    const finalStatus = hasMorePages ? 'partial' : 'completed';
     
-    // Update final progress
+    console.log(`Paginering slutförd: nextPageUrl=${nextPageUrl ? 'finns' : 'null'}, pagesProcessed=${pagesProcessedThisExecution}/${MAX_PAGES_PER_EXECUTION}`);
+    
+    // Update final progress with next_page_url for resumption
     await updateProgress(supabaseClient, dataType, {
       current_page: currentPage - 1,
       items_fetched: totalInserted,
+      pages_processed: pagesProcessedThisExecution,
+      next_page_url: hasMorePages ? nextPageUrl : null,
       status: finalStatus
     });
 

@@ -18,20 +18,20 @@ const DataFetchButton = ({ type = 'riksdagen' }: DataFetchButtonProps) => {
   const [isLoading, setIsLoading] = useState(false);
   const { toast } = useToast();
 
-  const fetchData = async (dataType: string, limit: number = 50) => {
+  const fetchData = async (dataType: string) => {
     setIsLoading(true);
     const functionName = type === 'riksdagen' ? 'fetch-riksdagen-data' : 'fetch-regeringskansliet-data';
     
     try {
       const { data, error } = await supabase.functions.invoke(functionName, {
-        body: { dataType, limit }
+        body: { dataType }
       });
 
       if (error) throw error;
 
       toast({
         title: "Data hämtad!",
-        description: `${data.inserted} ${dataType} hämtades från Riksdagens API`,
+        description: `${data.inserted} ${dataType} hämtades från API:et`,
       });
     } catch (error: any) {
       toast({
@@ -60,35 +60,107 @@ const DataFetchButton = ({ type = 'riksdagen' }: DataFetchButtonProps) => {
           Hämta data
         </Button>
       </DropdownMenuTrigger>
-      <DropdownMenuContent align="end">
+      <DropdownMenuContent align="end" className="max-h-[400px] overflow-y-auto">
         {type === 'riksdagen' ? (
           <>
-            <DropdownMenuItem onClick={() => fetchData('dokument', 100)}>
+            <DropdownMenuItem onClick={() => fetchData('dokument')}>
               Hämta dokument
             </DropdownMenuItem>
-            <DropdownMenuItem onClick={() => fetchData('ledamoter', 500)}>
+            <DropdownMenuItem onClick={() => fetchData('ledamoter')}>
               Hämta ledamöter
             </DropdownMenuItem>
-            <DropdownMenuItem onClick={() => fetchData('anforanden', 100)}>
+            <DropdownMenuItem onClick={() => fetchData('anforanden')}>
               Hämta anföranden
             </DropdownMenuItem>
-            <DropdownMenuItem onClick={() => fetchData('voteringar', 100)}>
+            <DropdownMenuItem onClick={() => fetchData('voteringar')}>
               Hämta voteringar
             </DropdownMenuItem>
           </>
         ) : (
           <>
-            <DropdownMenuItem onClick={() => fetchData('pressmeddelanden', 100)}>
-              Hämta pressmeddelanden
+            <DropdownMenuItem onClick={() => fetchData('pressmeddelanden')}>
+              Pressmeddelanden
             </DropdownMenuItem>
-            <DropdownMenuItem onClick={() => fetchData('propositioner', 100)}>
-              Hämta propositioner
+            <DropdownMenuItem onClick={() => fetchData('propositioner')}>
+              Propositioner
             </DropdownMenuItem>
-            <DropdownMenuItem onClick={() => fetchData('dokument', 100)}>
-              Hämta dokument
+            <DropdownMenuItem onClick={() => fetchData('dokument')}>
+              Alla dokument
             </DropdownMenuItem>
-            <DropdownMenuItem onClick={() => fetchData('kategorier', 500)}>
-              Hämta kategorier
+            <DropdownMenuItem onClick={() => fetchData('kategorier')}>
+              Kategorier
+            </DropdownMenuItem>
+            <DropdownMenuItem onClick={() => fetchData('departementsserien')}>
+              Departementsserien
+            </DropdownMenuItem>
+            <DropdownMenuItem onClick={() => fetchData('forordningsmotiv')}>
+              Förordningsmotiv
+            </DropdownMenuItem>
+            <DropdownMenuItem onClick={() => fetchData('kommittedirektiv')}>
+              Kommittédirektiv
+            </DropdownMenuItem>
+            <DropdownMenuItem onClick={() => fetchData('lagradsremiss')}>
+              Lagradsremiss
+            </DropdownMenuItem>
+            <DropdownMenuItem onClick={() => fetchData('skrivelse')}>
+              Skrivelser
+            </DropdownMenuItem>
+            <DropdownMenuItem onClick={() => fetchData('sou')}>
+              SOU (Statens offentliga utredningar)
+            </DropdownMenuItem>
+            <DropdownMenuItem onClick={() => fetchData('internationella-overenskommelser')}>
+              Internationella överenskommelser
+            </DropdownMenuItem>
+            <DropdownMenuItem onClick={() => fetchData('faktapromemoria')}>
+              Faktapromemoria
+            </DropdownMenuItem>
+            <DropdownMenuItem onClick={() => fetchData('informationsmaterial')}>
+              Informationsmaterial
+            </DropdownMenuItem>
+            <DropdownMenuItem onClick={() => fetchData('mr-granskningar')}>
+              MR-granskningar
+            </DropdownMenuItem>
+            <DropdownMenuItem onClick={() => fetchData('dagordningar')}>
+              Kommenterade dagordningar
+            </DropdownMenuItem>
+            <DropdownMenuItem onClick={() => fetchData('rapporter')}>
+              Rapporter
+            </DropdownMenuItem>
+            <DropdownMenuItem onClick={() => fetchData('remisser')}>
+              Remisser
+            </DropdownMenuItem>
+            <DropdownMenuItem onClick={() => fetchData('regeringsuppdrag')}>
+              Regeringsuppdrag
+            </DropdownMenuItem>
+            <DropdownMenuItem onClick={() => fetchData('regeringsarenden')}>
+              Regeringsärenden
+            </DropdownMenuItem>
+            <DropdownMenuItem onClick={() => fetchData('sakrad')}>
+              Sakråd
+            </DropdownMenuItem>
+            <DropdownMenuItem onClick={() => fetchData('bistands-strategier')}>
+              Biståndsstrategier
+            </DropdownMenuItem>
+            <DropdownMenuItem onClick={() => fetchData('overenskommelser-avtal')}>
+              Överenskommelser och avtal
+            </DropdownMenuItem>
+            <DropdownMenuItem onClick={() => fetchData('arendeforteckningar')}>
+              Ärendeförteckningar
+            </DropdownMenuItem>
+            <DropdownMenuItem onClick={() => fetchData('artiklar')}>
+              Artiklar
+            </DropdownMenuItem>
+            <DropdownMenuItem onClick={() => fetchData('debattartiklar')}>
+              Debattartiklar
+            </DropdownMenuItem>
+            <DropdownMenuItem onClick={() => fetchData('tal')}>
+              Tal
+            </DropdownMenuItem>
+            <DropdownMenuItem onClick={() => fetchData('ud-avrader')}>
+              UD avråder
+            </DropdownMenuItem>
+            <DropdownMenuItem onClick={() => fetchData('uttalanden')}>
+              Uttalanden
             </DropdownMenuItem>
           </>
         )}

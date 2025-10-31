@@ -12,6 +12,8 @@ import Voteringar from "./pages/Voteringar";
 import Regeringskansliet from "./pages/Regeringskansliet";
 import Pressmeddelanden from "./pages/Pressmeddelanden";
 import RegeringskanslientPropositioner from "./pages/RegeringskanslientPropositioner";
+import RegeringskanslientDokument from "./pages/RegeringskanslientDokument";
+import RegeringskanslientKategorier from "./pages/RegeringskanslientKategorier";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -32,6 +34,8 @@ const App = () => (
           <Route path="/regeringskansliet" element={<Regeringskansliet />} />
           <Route path="/regeringskansliet/pressmeddelanden" element={<Pressmeddelanden />} />
           <Route path="/regeringskansliet/propositioner" element={<RegeringskanslientPropositioner />} />
+          <Route path="/regeringskansliet/dokument" element={<RegeringskanslientDokument />} />
+          <Route path="/regeringskansliet/kategorier" element={<RegeringskanslientKategorier />} />
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
           <Route path="*" element={<NotFound />} />
         </Routes>

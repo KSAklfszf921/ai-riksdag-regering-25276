@@ -14,6 +14,30 @@ export type Database = {
   }
   public: {
     Tables: {
+      data_fetch_control: {
+        Row: {
+          data_type: string
+          id: string
+          should_stop: boolean | null
+          source: string
+          updated_at: string | null
+        }
+        Insert: {
+          data_type: string
+          id?: string
+          should_stop?: boolean | null
+          source: string
+          updated_at?: string | null
+        }
+        Update: {
+          data_type?: string
+          id?: string
+          should_stop?: boolean | null
+          source?: string
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
       data_fetch_progress: {
         Row: {
           created_at: string | null
@@ -56,6 +80,57 @@ export type Database = {
           total_items?: number | null
           total_pages?: number | null
           updated_at?: string | null
+        }
+        Relationships: []
+      }
+      file_download_queue: {
+        Row: {
+          attempts: number | null
+          bucket: string
+          column_name: string
+          completed_at: string | null
+          created_at: string | null
+          error_message: string | null
+          file_url: string
+          id: string
+          max_attempts: number | null
+          record_id: string
+          started_at: string | null
+          status: string | null
+          storage_path: string
+          table_name: string
+        }
+        Insert: {
+          attempts?: number | null
+          bucket: string
+          column_name: string
+          completed_at?: string | null
+          created_at?: string | null
+          error_message?: string | null
+          file_url: string
+          id?: string
+          max_attempts?: number | null
+          record_id: string
+          started_at?: string | null
+          status?: string | null
+          storage_path: string
+          table_name: string
+        }
+        Update: {
+          attempts?: number | null
+          bucket?: string
+          column_name?: string
+          completed_at?: string | null
+          created_at?: string | null
+          error_message?: string | null
+          file_url?: string
+          id?: string
+          max_attempts?: number | null
+          record_id?: string
+          started_at?: string | null
+          status?: string | null
+          storage_path?: string
+          table_name?: string
         }
         Relationships: []
       }

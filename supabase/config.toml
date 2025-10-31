@@ -5,3 +5,6 @@ verify_jwt = false
 
 [functions.fetch-regeringskansliet-data]
 verify_jwt = false
+
+[functions.process-file-queue]
+verify_jwt = false

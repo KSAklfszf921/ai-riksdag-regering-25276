@@ -16,11 +16,51 @@ interface DataFetchButtonProps {
 
 const DataFetchButton = ({ type = 'riksdagen' }: DataFetchButtonProps) => {
   const [isLoading, setIsLoading] = useState(false);
+  const [activeDataType, setActiveDataType] = useState<string | null>(null);
   const { toast } = useToast();
+
+  const stopFetching = async (dataType: string) => {
+    try {
+      const source = type === 'riksdagen' ? 'riksdagen' : 'regeringskansliet';
+      const { error } = await supabase
+        .from('data_fetch_control')
+        .upsert({
+          source,
+          data_type: dataType,
+          should_stop: true
+        }, { onConflict: 'source,data_type' });
+
+      if (error) throw error;
+
+      toast({
+        title: "Stoppsignal skickad",
+        description: "Datahämtningen stoppas vid nästa kontrollpunkt",
+      });
+      
+      setActiveDataType(null);
+    } catch (error: any) {
+      toast({
+        title: "Fel vid stopp",
+        description: error.message,
+        variant: "destructive",
+      });
+    }
+  };
 
   const fetchData = async (dataType: string, paginate: boolean = true) => {
     setIsLoading(true);
+    setActiveDataType(dataType);
     const functionName = type === 'riksdagen' ? 'fetch-riksdagen-data' : 'fetch-regeringskansliet-data';
+    
+    // Reset stop signal innan vi börjar
+    const source = type === 'riksdagen' ? 'riksdagen' : 'regeringskansliet';
+    await supabase
+      .from('data_fetch_control')
+      .upsert({
+        source,
+        data_type: dataType,
+        should_stop: false
+      }, { onConflict: 'source,data_type' });
     
     try {
       const { data, error } = await supabase.functions.invoke(functionName, {
@@ -48,11 +88,22 @@ const DataFetchButton = ({ type = 'riksdagen' }: DataFetchButtonProps) => {
       });
     } finally {
       setIsLoading(false);
+      setActiveDataType(null);
     }
   };
 
   return (
-    <DropdownMenu>
+    <div className="flex gap-2 items-center">
+      {isLoading && activeDataType && (
+        <Button 
+          variant="destructive" 
+          size="sm"
+          onClick={() => stopFetching(activeDataType)}
+        >
+          Stoppa hämtning
+        </Button>
+      )}
+      <DropdownMenu>
       <DropdownMenuTrigger asChild>
         <Button 
           variant="outline" 
@@ -170,6 +221,7 @@ const DataFetchButton = ({ type = 'riksdagen' }: DataFetchButtonProps) => {
         )}
       </DropdownMenuContent>
     </DropdownMenu>
+    </div>
   );
 };
 

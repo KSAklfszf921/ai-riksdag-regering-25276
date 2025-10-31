@@ -174,8 +174,8 @@ export const GenericDocumentPage = ({
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-background to-muted/20">
-      <div className="container mx-auto px-4 py-8 max-w-7xl">
+    <div className="min-h-screen bg-background">
+      <div className="container mx-auto px-4 py-6 md:py-8 max-w-7xl">
         <div className="mb-8">
           <Link to={backLink}>
             <Button variant="ghost" className="mb-4">
@@ -184,27 +184,27 @@ export const GenericDocumentPage = ({
             </Button>
           </Link>
           
-          <h1 className="text-4xl font-bold mb-4 bg-gradient-to-r from-primary to-primary/60 bg-clip-text text-transparent">
+          <h1 className="text-3xl md:text-4xl font-serif font-bold mb-4 text-foreground">
             {title}
           </h1>
           <p className="text-muted-foreground text-lg mb-6">{description}</p>
 
           <ProgressTracker source={source} />
 
-          <div className="flex flex-wrap gap-4 items-center mb-6">
-            <div className="relative flex-1 min-w-[300px]">
+          <div className="flex flex-col md:flex-row gap-3 md:gap-4 items-stretch md:items-center mb-6">
+            <div className="relative flex-1 min-w-0">
               <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
               <Input
                 placeholder="Sök efter titel, dokumentnummer eller beteckning..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="pl-10"
+                className="pl-10 h-11"
               />
             </div>
             <select
               value={sortBy}
               onChange={(e) => setSortBy(e.target.value)}
-              className="px-4 py-2 border rounded-md bg-background"
+              className="px-4 py-2 h-11 border rounded-md bg-background text-sm min-w-[200px]"
             >
               <option value="datum">Sortera efter datum</option>
               <option value="titel">Sortera efter titel</option>
@@ -219,13 +219,15 @@ export const GenericDocumentPage = ({
               onCategoryToggle={handleCategoryToggle}
               onClearFilters={handleClearFilters}
             />
-            <Button variant="outline" onClick={handleExportCSV} disabled={!filteredDocuments || filteredDocuments.length === 0}>
+            <Button variant="outline" onClick={handleExportCSV} disabled={!filteredDocuments || filteredDocuments.length === 0} className="h-11">
               <FileDown className="h-4 w-4 mr-2" />
-              Exportera CSV
+              <span className="hidden sm:inline">Exportera CSV</span>
+              <span className="sm:hidden">CSV</span>
             </Button>
-            <Button variant="outline" onClick={handleExportJSON} disabled={!filteredDocuments || filteredDocuments.length === 0}>
+            <Button variant="outline" onClick={handleExportJSON} disabled={!filteredDocuments || filteredDocuments.length === 0} className="h-11">
               <FileDown className="h-4 w-4 mr-2" />
-              Exportera JSON
+              <span className="hidden sm:inline">Exportera JSON</span>
+              <span className="sm:hidden">JSON</span>
             </Button>
           </div>
 
@@ -258,7 +260,7 @@ export const GenericDocumentPage = ({
           <>
             <div className="space-y-4">
               {paginatedDocuments.map((doc: any) => (
-                <Card key={doc.id} className="hover:shadow-md transition-shadow">
+                <Card key={doc.id} className="hover:shadow-sm transition-all duration-200 border-border/50">
                   <CardHeader>
                     <div className="flex items-start justify-between gap-4">
                       <div className="flex-1">

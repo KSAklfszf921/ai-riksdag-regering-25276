@@ -32,12 +32,16 @@ const Index = () => {
 
   return (
     <div className="min-h-screen bg-background">
-      {/* Header bar */}
-      <div className="w-full bg-primary py-1 flex items-center justify-end px-4">
-        <ThemeToggle />
-      </div>
+      <header className="sticky top-0 z-50 w-full border-b border-border/40 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
+        <div className="container mx-auto flex h-14 items-center justify-between px-4">
+          <div className="flex items-center gap-2">
+            <span className="text-sm font-medium text-muted-foreground">Riksdag & Regering</span>
+          </div>
+          <ThemeToggle />
+        </div>
+      </header>
 
-      <div className="container mx-auto px-4 py-12 md:py-20 max-w-6xl">
+      <div className="container mx-auto px-4 py-8 md:py-16 max-w-6xl">
         <div className="flex justify-end gap-2 mb-4">
           {/* Favorites button - show for logged in users */}
           {user && (
@@ -80,11 +84,14 @@ const Index = () => {
           )}
         </div>
 
-        <header className="text-center mb-16 md:mb-20">
-          <h1 className="text-4xl md:text-5xl lg:text-6xl font-serif font-bold text-foreground mb-4 tracking-tight">
+        <header className="text-center mb-12 md:mb-16">
+          <h1 className="text-3xl md:text-4xl lg:text-5xl font-serif font-bold text-foreground mb-3 tracking-tight">
             Riksdag & Regering
           </h1>
-          <div className="w-20 h-1 bg-secondary mx-auto mb-6"></div>
+          <div className="w-16 h-0.5 bg-primary/20 mx-auto mb-4"></div>
+          <p className="text-muted-foreground text-sm md:text-base max-w-2xl mx-auto">
+            Utforska svenska politiska institutioner med AI-baserade informationstjänster
+          </p>
         </header>
 
         <div className="grid md:grid-cols-2 gap-6 md:gap-8 max-w-5xl mx-auto mb-16">
@@ -103,11 +110,30 @@ const Index = () => {
           />
         </div>
 
-        <footer className="border-t border-border pt-8 mt-12">
-          <div className="text-center space-y-3">
+        <footer className="border-t border-border/40 bg-muted/20 -mx-4 px-4 py-8 mt-16">
+          <div className="grid gap-8 md:grid-cols-3 max-w-4xl mx-auto">
+            <div>
+              <h3 className="text-sm font-semibold mb-3">Om tjänsten</h3>
+              <p className="text-xs text-muted-foreground leading-relaxed">
+                En informationstjänst för svenska politiska institutioner. Denna tjänst är inte officiell.
+              </p>
+            </div>
+            <div>
+              <h3 className="text-sm font-semibold mb-3">Tillgänglighet</h3>
+              <p className="text-xs text-muted-foreground">
+                Vi strävar efter WCAG 2.1 AA-standard för att säkerställa tillgänglighet för alla användare.
+              </p>
+            </div>
+            <div>
+              <h3 className="text-sm font-semibold mb-3">Kontakt</h3>
+              <p className="text-xs text-muted-foreground">
+                För frågor om tjänsten, kontakta administratören.
+              </p>
+            </div>
+          </div>
+          <div className="mt-8 pt-6 border-t border-border/40 text-center">
             <p className="text-xs text-muted-foreground">
-              Denna tjänst tillhandahålls i informationssyfte och är inte en
-              officiell myndighetstjänst
+              © {new Date().getFullYear()} Svenska AI-tjänster. Alla rättigheter förbehållna.
             </p>
           </div>
         </footer>

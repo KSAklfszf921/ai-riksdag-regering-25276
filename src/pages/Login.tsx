@@ -21,24 +21,44 @@ const Login = () => {
 
     try {
       if (isSignUp) {
-        const { error } = await supabase.auth.signUp({
+        const redirectUrl = `${window.location.origin}/`;
+        const { data, error } = await supabase.auth.signUp({
           email,
           password,
+          options: {
+            emailRedirectTo: redirectUrl,
+          },
         });
 
         if (error) throw error;
 
-        toast({
-          title: "Konto skapat!",
-          description: "Kontrollera din e-post för verifiering.",
-        });
+        // Check if email confirmation is disabled (instant login)
+        if (data.session) {
+          toast({
+            title: "Konto skapat och inloggad!",
+            description: "Du är nu inloggad.",
+          });
+          navigate("/");
+        } else {
+          toast({
+            title: "Konto skapat!",
+            description: "E-postbekräftelse krävs. Kontrollera din inkorg eller inaktivera 'Confirm email' i Supabase-inställningarna för snabbare utveckling.",
+          });
+          setIsSignUp(false); // Switch to login view
+        }
       } else {
-        const { error } = await supabase.auth.signInWithPassword({
+        const { data, error } = await supabase.auth.signInWithPassword({
           email,
           password,
         });
 
-        if (error) throw error;
+        if (error) {
+          // Provide more helpful error message
+          if (error.message.includes("Invalid login credentials")) {
+            throw new Error("Felaktigt e-post eller lösenord. Om du precis registrerade dig, kontrollera om du behöver bekräfta din e-post först.");
+          }
+          throw error;
+        }
 
         toast({
           title: "Inloggad!",
@@ -74,6 +94,15 @@ const Login = () => {
         </CardHeader>
         <CardContent>
           <form onSubmit={handleAuth} className="space-y-4">
+            {!isSignUp && (
+              <div className="p-3 bg-blue-50 dark:bg-blue-950/20 border border-blue-200 dark:border-blue-800 rounded text-sm">
+                <p className="text-blue-900 dark:text-blue-100">
+                  <strong>Tips:</strong> Om du precis skapat ett konto och e-postbekräftelse är aktiverad, 
+                  kontrollera din inkorg för bekräftelselänken först.
+                </p>
+              </div>
+            )}
+            
             <div>
               <Input
                 type="email"
@@ -86,7 +115,7 @@ const Login = () => {
             <div>
               <Input
                 type="password"
-                placeholder="Lösenord"
+                placeholder="Lösenord (minst 6 tecken)"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 required
@@ -107,6 +136,15 @@ const Login = () => {
                 : "Inget konto? Skapa ett"}
             </Button>
           </form>
+          
+          {isSignUp && (
+            <div className="mt-4 p-3 bg-amber-50 dark:bg-amber-950/20 border border-amber-200 dark:border-amber-800 rounded text-sm">
+              <p className="text-amber-900 dark:text-amber-100">
+                <strong>För utveckling:</strong> Inaktivera "Confirm email" i Supabase under 
+                Authentication → Providers → Email för att hoppa över e-postbekräftelse.
+              </p>
+            </div>
+          )}
         </CardContent>
       </Card>
     </div>

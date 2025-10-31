@@ -5,48 +5,44 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 }
 
-// Hjälpfunktion för att ladda ner och spara filer till Storage
-async function downloadAndStoreFile(
+// Lägg till fil i nedladdningskö istället för att ladda ner direkt
+async function enqueueFileDownload(
   supabaseClient: any,
   fileUrl: string,
   bucket: string,
-  path: string
-): Promise<string | null> {
+  path: string,
+  tableName: string,
+  recordId: string,
+  columnName: string
+) {
   try {
-    console.log(`Laddar ner fil från: ${fileUrl}`);
-    const response = await fetch(fileUrl);
-    if (!response.ok) {
-      console.error(`Kunde inte ladda ner fil: ${response.status}`);
-      return null;
-    }
-    
-    const blob = await response.blob();
-    const arrayBuffer = await blob.arrayBuffer();
-    
-    // Spara till Supabase Storage
-    const { data, error } = await supabaseClient.storage
-      .from(bucket)
-      .upload(path, arrayBuffer, {
-        contentType: blob.type || 'application/octet-stream',
-        upsert: true
+    await supabaseClient
+      .from('file_download_queue')
+      .insert({
+        file_url: fileUrl,
+        bucket,
+        storage_path: path,
+        table_name: tableName,
+        record_id: recordId,
+        column_name: columnName,
+        status: 'pending'
       });
-    
-    if (error) {
-      console.error('Storage upload fel:', error);
-      return null;
-    }
-    
-    // Returnera publik URL
-    const { data: { publicUrl } } = supabaseClient.storage
-      .from(bucket)
-      .getPublicUrl(path);
-    
-    console.log(`Fil sparad: ${publicUrl}`);
-    return publicUrl;
+    console.log(`Fil tillagd i kö: ${path}`);
   } catch (err) {
-    console.error('Fil-nedladdningsfel:', err);
-    return null;
+    console.error('Fel vid tillägg i filkö:', err);
   }
+}
+
+// Kontrollera om hämtning ska stoppas
+async function shouldStop(supabaseClient: any, dataType: string): Promise<boolean> {
+  const { data } = await supabaseClient
+    .from('data_fetch_control')
+    .select('should_stop')
+    .eq('source', 'regeringskansliet')
+    .eq('data_type', dataType)
+    .maybeSingle();
+  
+  return data?.should_stop === true;
 }
 
 // Uppdatera progress
@@ -153,6 +149,16 @@ Deno.serve(async (req) => {
       await updateProgress(supabaseClient, dataType, { total_items: totalItems });
       
       for (const item of items) {
+        // Kontrollera stoppsignal
+        if (await shouldStop(supabaseClient, dataType)) {
+          console.log('Stoppsignal mottagen, avbryter hämtning');
+          await updateProgress(supabaseClient, dataType, {
+            status: 'stopped',
+            error_message: 'Manuellt stoppad av användare'
+          });
+          break;
+        }
+        
         try {
           const pressData: any = {
             document_id: item.id || item.url,
@@ -163,37 +169,31 @@ Deno.serve(async (req) => {
             innehall: item.summary || item.description,
           };
 
-          // Ladda ner bilagor om de finns
-          if (item.attachments && Array.isArray(item.attachments)) {
-            const localBilagor = [];
+          // Lägg till bilagor i nedladdningskö istället för direkt nedladdning
+          const { data: insertedPress, error: insertError } = await supabaseClient
+            .from(tableName)
+            .upsert(pressData, { onConflict: 'document_id' })
+            .select('id')
+            .single();
+
+          if (insertedPress && item.attachments && Array.isArray(item.attachments)) {
             for (const attachment of item.attachments) {
               const fileName = attachment.url.split('/').pop() || `bilaga_${Date.now()}.pdf`;
               const filePath = `pressmeddelanden/${item.id || Date.now()}/${fileName}`;
-              const localUrl = await downloadAndStoreFile(
+              await enqueueFileDownload(
                 supabaseClient,
                 attachment.url,
                 'regeringskansliet-files',
-                filePath
+                filePath,
+                tableName,
+                insertedPress.id,
+                'local_bilagor'
               );
-              if (localUrl) {
-                localBilagor.push({
-                  original_url: attachment.url,
-                  local_url: localUrl,
-                  filename: fileName
-                });
-              }
-            }
-            if (localBilagor.length > 0) {
-              pressData.local_bilagor = localBilagor;
             }
           }
 
-          const { error } = await supabaseClient
-            .from(tableName)
-            .upsert(pressData, { onConflict: 'document_id' });
-
-          if (error) {
-            console.error('Fel vid insättning:', error);
+          if (insertError) {
+            console.error('Fel vid insättning:', insertError);
             errors++;
           } else {
             insertedCount++;
@@ -210,6 +210,16 @@ Deno.serve(async (req) => {
       await updateProgress(supabaseClient, dataType, { total_items: totalItems });
       
       for (const item of items) {
+        // Kontrollera stoppsignal
+        if (await shouldStop(supabaseClient, dataType)) {
+          console.log('Stoppsignal mottagen, avbryter hämtning');
+          await updateProgress(supabaseClient, dataType, {
+            status: 'stopped',
+            error_message: 'Manuellt stoppad av användare'
+          });
+          break;
+        }
+        
         try {
           const propData: any = {
             document_id: item.id || item.url,
@@ -221,27 +231,29 @@ Deno.serve(async (req) => {
             pdf_url: item.attachments?.[0]?.url,
           };
 
-          // Ladda ner PDF om det finns
-          if (propData.pdf_url) {
+          // Lägg till PDF i nedladdningskö istället för direkt nedladdning
+          const { data: insertedProp, error: insertError } = await supabaseClient
+            .from(tableName)
+            .upsert(propData, { onConflict: 'document_id' })
+            .select('id')
+            .single();
+
+          if (insertedProp && propData.pdf_url) {
             const fileName = `${item.identifier || item.id || Date.now()}.pdf`;
             const filePath = `propositioner/${fileName}`;
-            const localPdfUrl = await downloadAndStoreFile(
+            await enqueueFileDownload(
               supabaseClient,
               propData.pdf_url,
               'regeringskansliet-files',
-              filePath
+              filePath,
+              tableName,
+              insertedProp.id,
+              'local_pdf_url'
             );
-            if (localPdfUrl) {
-              propData.local_pdf_url = localPdfUrl;
-            }
           }
 
-          const { error } = await supabaseClient
-            .from(tableName)
-            .upsert(propData, { onConflict: 'document_id' });
-
-          if (error) {
-            console.error('Fel vid insättning:', error);
+          if (insertError) {
+            console.error('Fel vid insättning:', insertError);
             errors++;
           } else {
             insertedCount++;
@@ -259,6 +271,16 @@ Deno.serve(async (req) => {
       await updateProgress(supabaseClient, dataType, { total_items: totalItems });
       
       for (const [kod, namn] of entries) {
+        // Kontrollera stoppsignal
+        if (await shouldStop(supabaseClient, dataType)) {
+          console.log('Stoppsignal mottagen, avbryter hämtning');
+          await updateProgress(supabaseClient, dataType, {
+            status: 'stopped',
+            error_message: 'Manuellt stoppad av användare'
+          });
+          break;
+        }
+        
         try {
           const kategoriData = {
             kod: kod,
@@ -288,6 +310,16 @@ Deno.serve(async (req) => {
       await updateProgress(supabaseClient, dataType, { total_items: totalItems });
       
       for (const item of items) {
+        // Kontrollera stoppsignal
+        if (await shouldStop(supabaseClient, dataType)) {
+          console.log('Stoppsignal mottagen, avbryter hämtning');
+          await updateProgress(supabaseClient, dataType, {
+            status: 'stopped',
+            error_message: 'Manuellt stoppad av användare'
+          });
+          break;
+        }
+        
         try {
           const docData: any = {
             document_id: item.id || item.url,
@@ -302,37 +334,31 @@ Deno.serve(async (req) => {
             markdown_url: item.url ? item.url.replace('regeringen.se', 'g0v.se').replace(/\/$/, '.md') : null,
           };
 
-          // Ladda ner bilagor om de finns
-          if (item.attachments && Array.isArray(item.attachments)) {
-            const localFiles = [];
+          // Lägg till bilagor i nedladdningskö istället för direkt nedladdning
+          const { data: insertedDoc, error: insertError } = await supabaseClient
+            .from(tableName)
+            .upsert(docData, { onConflict: 'document_id' })
+            .select('id')
+            .single();
+
+          if (insertedDoc && item.attachments && Array.isArray(item.attachments)) {
             for (const attachment of item.attachments) {
               const fileName = attachment.url.split('/').pop() || `file_${Date.now()}`;
               const filePath = `${dataType}/${item.id || Date.now()}/${fileName}`;
-              const localUrl = await downloadAndStoreFile(
+              await enqueueFileDownload(
                 supabaseClient,
                 attachment.url,
                 'regeringskansliet-files',
-                filePath
+                filePath,
+                tableName,
+                insertedDoc.id,
+                'local_files'
               );
-              if (localUrl) {
-                localFiles.push({
-                  original_url: attachment.url,
-                  local_url: localUrl,
-                  filename: fileName
-                });
-              }
-            }
-            if (localFiles.length > 0) {
-              docData.local_files = localFiles;
             }
           }
 
-          const { error } = await supabaseClient
-            .from(tableName)
-            .upsert(docData, { onConflict: 'document_id' });
-
-          if (error) {
-            console.error('Fel vid insättning:', error);
+          if (insertError) {
+            console.error('Fel vid insättning:', insertError);
             errors++;
           } else {
             insertedCount++;

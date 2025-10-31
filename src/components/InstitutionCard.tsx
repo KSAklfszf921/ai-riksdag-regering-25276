@@ -1,5 +1,6 @@
 import { Card } from "@/components/ui/card";
 import { ArrowRight } from "lucide-react";
+import { Link } from "react-router-dom";
 interface InstitutionCardProps {
   title: string;
   description: string;
@@ -14,7 +15,7 @@ export const InstitutionCard = ({
   icon,
   image
 }: InstitutionCardProps) => {
-  return <a href={href} className="block group" target="_blank" rel="noopener noreferrer">
+  return <Link to={href} className="block group">
       <Card className="p-8 md:p-10 h-full transition-all duration-300 hover:shadow-2xl border border-border bg-card group-hover:border-primary/50">
         <div className="flex flex-col items-center text-center space-y-6">
           {image ? <div className="w-40 h-24 flex items-center justify-center transition-transform duration-300 group-hover:scale-105">
@@ -36,5 +37,5 @@ export const InstitutionCard = ({
           </div>
         </div>
       </Card>
-    </a>;
+    </Link>;
 };

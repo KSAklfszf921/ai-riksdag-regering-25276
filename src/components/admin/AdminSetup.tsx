@@ -23,9 +23,7 @@ export const AdminSetup = () => {
     queryKey: ["user-roles"],
     queryFn: async () => {
       const { data, error } = await supabase
-        .from("user_roles")
-        .select("*, user:auth.users(email)")
-        .order("created_at", { ascending: false });
+        .rpc("get_user_roles_with_emails");
 
       if (error) throw error;
       return data || [];
@@ -122,7 +120,7 @@ export const AdminSetup = () => {
                   key={role.id}
                   className="flex items-center justify-between p-2 border rounded"
                 >
-                  <span className="text-sm">{role.user?.email || role.user_id}</span>
+                  <span className="text-sm">{role.email || role.user_id}</span>
                   <span className="text-xs text-muted-foreground uppercase">
                     {role.role}
                   </span>

@@ -8,6 +8,7 @@ import { DataProcessControl } from "@/components/admin/DataProcessControl";
 import { FileQueueControl } from "@/components/admin/FileQueueControl";
 import { AdminSetup } from "@/components/admin/AdminSetup";
 import { SyncProgress } from "@/components/admin/SyncProgress";
+import { SystemHealth } from "@/components/admin/SystemHealth";
 import { Skeleton } from "@/components/ui/skeleton";
 
 const Admin = () => {
@@ -105,38 +106,10 @@ const Admin = () => {
           </TabsContent>
 
           <TabsContent value="settings" className="space-y-4">
+            <SystemHealth />
             <AdminSetup />
           </TabsContent>
         </Tabs>
-
-        <Card className="mt-6">
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <Settings className="h-5 w-5" />
-              Systemstatus
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="grid grid-cols-3 gap-4">
-              <div className="text-center p-4 border rounded">
-                <div className="text-2xl font-bold text-green-600">Online</div>
-                <div className="text-sm text-muted-foreground">
-                  Edge Functions
-                </div>
-              </div>
-              <div className="text-center p-4 border rounded">
-                <div className="text-2xl font-bold text-green-600">Active</div>
-                <div className="text-sm text-muted-foreground">Database</div>
-              </div>
-              <div className="text-center p-4 border rounded">
-                <div className="text-2xl font-bold text-green-600">Ready</div>
-                <div className="text-sm text-muted-foreground">
-                  Storage
-                </div>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
       </div>
     </div>
   );

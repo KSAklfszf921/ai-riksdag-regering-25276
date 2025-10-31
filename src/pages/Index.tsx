@@ -9,29 +9,33 @@ import { useToast } from "@/hooks/use-toast";
 import { ThemeToggle } from "@/components/ThemeToggle";
 import riksdagenLogo from "@/assets/riksdagen-logo.svg";
 import regeringskanslientLogo from "@/assets/regeringskansliet-logo.svg";
-
 const Index = () => {
-  const { isAdmin } = useIsAdmin();
-  const { toast } = useToast();
-
-  const { data: user, isLoading: userLoading } = useQuery({
+  const {
+    isAdmin
+  } = useIsAdmin();
+  const {
+    toast
+  } = useToast();
+  const {
+    data: user,
+    isLoading: userLoading
+  } = useQuery({
     queryKey: ["current-user"],
     queryFn: async () => {
-      const { data } = await supabase.auth.getUser();
+      const {
+        data
+      } = await supabase.auth.getUser();
       return data.user;
-    },
+    }
   });
-
   const handleLogout = async () => {
     await supabase.auth.signOut();
     toast({
       title: "Utloggad",
-      description: "Du är nu utloggad",
+      description: "Du är nu utloggad"
     });
   };
-
-  return (
-    <div className="min-h-screen bg-background">
+  return <div className="min-h-screen bg-background">
       <header className="sticky top-0 z-50 w-full border-b border-border/40 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
         <div className="container mx-auto flex h-14 items-center justify-between px-4">
           <div className="flex items-center gap-2">
@@ -44,28 +48,20 @@ const Index = () => {
       <div className="container mx-auto px-4 py-8 md:py-16 max-w-6xl">
         <div className="flex justify-end gap-2 mb-4">
           {/* Favorites button - show for logged in users */}
-          {user && (
-            <Link to="/favorites">
-              <Button variant="outline" size="sm">
-                <Heart className="h-4 w-4 mr-2" />
-                Favoriter
-              </Button>
-            </Link>
-          )}
+          {user && <Link to="/favorites">
+              
+            </Link>}
           
           {/* Admin button - show for logged in users */}
-          {user && (
-            <Link to="/admin">
+          {user && <Link to="/admin">
               <Button variant={isAdmin ? "default" : "outline"} size="sm">
                 <Shield className="h-4 w-4 mr-2" />
                 {isAdmin ? "Admin Panel" : "Admin Setup"}
               </Button>
-            </Link>
-          )}
+            </Link>}
           
           {/* Auth buttons */}
-          {user ? (
-            <div className="flex items-center gap-2">
+          {user ? <div className="flex items-center gap-2">
               <span className="text-sm text-muted-foreground hidden sm:inline">
                 {user.email}
               </span>
@@ -73,15 +69,12 @@ const Index = () => {
                 <LogOut className="h-4 w-4 mr-2" />
                 Logga ut
               </Button>
-            </div>
-          ) : (
-            <Link to="/login">
+            </div> : <Link to="/login">
               <Button size="sm">
                 <LogIn className="h-4 w-4 mr-2" />
                 Logga in för Admin
               </Button>
-            </Link>
-          )}
+            </Link>}
         </div>
 
         <header className="text-center mb-12 md:mb-16">
@@ -95,42 +88,13 @@ const Index = () => {
         </header>
 
         <div className="grid md:grid-cols-2 gap-6 md:gap-8 max-w-5xl mx-auto mb-16">
-          <InstitutionCard
-            title="Riksdagen"
-            description="Utforska Sveriges riksdag med AI. Få insikter om propositioner, debatter och beslutsprocesser."
-            href="/riksdagen"
-            image={riksdagenLogo}
-          />
+          <InstitutionCard title="Riksdagen" description="Utforska Sveriges riksdag med AI. Få insikter om propositioner, debatter och beslutsprocesser." href="/riksdagen" image={riksdagenLogo} />
 
-          <InstitutionCard
-            title="Regeringskansliet"
-            description="Upptäck regeringens arbete och organisation. AI-driven information om departement och policy."
-            href="/regeringskansliet"
-            image={regeringskanslientLogo}
-          />
+          <InstitutionCard title="Regeringskansliet" description="Upptäck regeringens arbete och organisation. AI-driven information om departement och policy." href="/regeringskansliet" image={regeringskanslientLogo} />
         </div>
 
         <footer className="border-t border-border/40 bg-muted/20 -mx-4 px-4 py-8 mt-16">
-          <div className="grid gap-8 md:grid-cols-3 max-w-4xl mx-auto">
-            <div>
-              <h3 className="text-sm font-semibold mb-3">Om tjänsten</h3>
-              <p className="text-xs text-muted-foreground leading-relaxed">
-                En informationstjänst för svenska politiska institutioner. Denna tjänst är inte officiell.
-              </p>
-            </div>
-            <div>
-              <h3 className="text-sm font-semibold mb-3">Tillgänglighet</h3>
-              <p className="text-xs text-muted-foreground">
-                Vi strävar efter WCAG 2.1 AA-standard för att säkerställa tillgänglighet för alla användare.
-              </p>
-            </div>
-            <div>
-              <h3 className="text-sm font-semibold mb-3">Kontakt</h3>
-              <p className="text-xs text-muted-foreground">
-                För frågor om tjänsten, kontakta administratören.
-              </p>
-            </div>
-          </div>
+          
           <div className="mt-8 pt-6 border-t border-border/40 text-center">
             <p className="text-xs text-muted-foreground">
               © {new Date().getFullYear()} Svenska AI-tjänster. Alla rättigheter förbehållna.
@@ -138,8 +102,6 @@ const Index = () => {
           </div>
         </footer>
       </div>
-    </div>
-  );
+    </div>;
 };
-
 export default Index;

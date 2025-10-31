@@ -80,8 +80,8 @@ const Voteringar = () => {
                       </CardTitle>
                       {vot.vinnare && (
                         <div className="flex items-center gap-2 mt-3">
-                          <CheckCircle2 className="h-4 w-4 text-green-600" />
-                          <span className="text-sm font-medium text-green-600">
+                          <CheckCircle2 className="h-4 w-4 text-success" />
+                          <span className="text-sm font-medium text-success">
                             Resultat: {vot.vinnare}
                           </span>
                         </div>

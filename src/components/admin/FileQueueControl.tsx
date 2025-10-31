@@ -198,7 +198,7 @@ export const FileQueueControl = () => {
             </div>
 
             <div className="flex items-center gap-2">
-              <RefreshCw className="h-4 w-4 text-blue-500" />
+              <RefreshCw className="h-4 w-4 text-info" />
               <div>
                 <div className="text-2xl font-bold">{queueStats.processing}</div>
                 <div className="text-xs text-muted-foreground">Processar</div>
@@ -206,7 +206,7 @@ export const FileQueueControl = () => {
             </div>
 
             <div className="flex items-center gap-2">
-              <CheckCircle2 className="h-4 w-4 text-green-500" />
+              <CheckCircle2 className="h-4 w-4 text-success" />
               <div>
                 <div className="text-2xl font-bold">{queueStats.completed}</div>
                 <div className="text-xs text-muted-foreground">Klara</div>
@@ -214,7 +214,7 @@ export const FileQueueControl = () => {
             </div>
 
             <div className="flex items-center gap-2">
-              <AlertCircle className="h-4 w-4 text-red-500" />
+              <AlertCircle className="h-4 w-4 text-error" />
               <div>
                 <div className="text-2xl font-bold">{queueStats.failed}</div>
                 <div className="text-xs text-muted-foreground">Misslyckade</div>

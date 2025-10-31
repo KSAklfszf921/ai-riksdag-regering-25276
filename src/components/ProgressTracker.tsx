@@ -62,10 +62,10 @@ const ProgressTracker = ({ source }: ProgressTrackerProps) => {
                             item.status === 'failed' ? AlertCircle :
                             isStopped ? AlertCircle :
                             Loader2;
-          const statusColor = item.status === 'completed' ? 'text-green-600' :
-                             item.status === 'failed' ? 'text-red-600' :
-                             isStopped ? 'text-orange-600' :
-                             'text-blue-600';
+          const statusColor = item.status === 'completed' ? 'text-success' :
+                             item.status === 'failed' ? 'text-error' :
+                             isStopped ? 'text-warning' :
+                             'text-info';
           
           return (
             <Card key={item.id}>
@@ -74,7 +74,7 @@ const ProgressTracker = ({ source }: ProgressTrackerProps) => {
                   <CardTitle className="text-base">{item.data_type}</CardTitle>
                   <div className="flex items-center gap-2">
                     {isStopped && (
-                      <Badge variant="outline" className="text-orange-600 border-orange-600">
+                      <Badge variant="outline" className="text-warning border-warning">
                         STOPPAD
                       </Badge>
                     )}
@@ -106,7 +106,7 @@ const ProgressTracker = ({ source }: ProgressTrackerProps) => {
                     </div>
                   )}
                   {item.error_message && (
-                    <p className="text-xs text-red-600">{item.error_message}</p>
+                    <p className="text-xs text-error">{item.error_message}</p>
                   )}
                 </div>
               </CardContent>

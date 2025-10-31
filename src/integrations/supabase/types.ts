@@ -1968,8 +1968,9 @@ export type Database = {
     Views: {
       storage_statistics: {
         Row: {
-          bucket_id: string | null
+          bucket_name: string | null
           file_count: number | null
+          last_updated: string | null
           total_size_bytes: number | null
         }
         Relationships: []

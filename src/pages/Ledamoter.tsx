@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Link } from "react-router-dom";
@@ -5,8 +6,10 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
+import FilterBar from "@/components/FilterBar";
 
 const Ledamoter = () => {
+  const [searchQuery, setSearchQuery] = useState("");
   const { data: ledamoter, isLoading } = useQuery({
     queryKey: ['ledamoter'],
     queryFn: async () => {
@@ -31,6 +34,16 @@ const Ledamoter = () => {
     'MP': 'bg-green-500',
   };
 
+  const filteredLedamoter = ledamoter?.filter((l) => {
+    const searchLower = searchQuery.toLowerCase();
+    return (
+      l.fornamn?.toLowerCase().includes(searchLower) ||
+      l.efternamn?.toLowerCase().includes(searchLower) ||
+      l.parti?.toLowerCase().includes(searchLower) ||
+      l.valkrets?.toLowerCase().includes(searchLower)
+    );
+  });
+
   return (
     <div className="min-h-screen bg-background">
       <div className="w-full bg-primary py-1"></div>
@@ -45,9 +58,15 @@ const Ledamoter = () => {
           </h1>
           <div className="w-20 h-1 bg-secondary mb-6"></div>
           <p className="text-muted-foreground">
-            {ledamoter?.length || 0} ledamöter i riksdagen
+            {filteredLedamoter?.length || 0} ledamöter i riksdagen
           </p>
         </header>
+
+        <FilterBar
+          searchQuery={searchQuery}
+          onSearchChange={setSearchQuery}
+          placeholder="Sök ledamot, parti eller valkrets..."
+        />
 
         {isLoading ? (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
@@ -63,7 +82,7 @@ const Ledamoter = () => {
           </div>
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
-            {ledamoter?.map((ledamot) => (
+            {filteredLedamoter?.map((ledamot) => (
               <Card key={ledamot.id} className="hover:shadow-lg transition-shadow">
                 <CardHeader className="text-center">
                   <Avatar className="h-24 w-24 mx-auto mb-4">

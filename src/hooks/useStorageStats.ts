@@ -16,8 +16,8 @@ export const useStorageStats = () => {
       if (error) throw error;
 
       // Calculate totals
-      const totalSize = buckets?.reduce((sum, b) => sum + (b.total_size_bytes || 0), 0) || 0;
-      const totalFiles = buckets?.reduce((sum, b) => sum + (b.file_count || 0), 0) || 0;
+      const totalSize = buckets?.reduce((sum: number, b: any) => sum + (b.total_size_bytes || 0), 0) || 0;
+      const totalFiles = buckets?.reduce((sum: number, b: any) => sum + (b.file_count || 0), 0) || 0;
 
       // Estimate growth (simplified - would need historical data for accurate calculation)
       const growthPerMonth = totalSize * 0.1; // 10% growth estimate

@@ -23,7 +23,7 @@ const FileIntegrityCheck = () => {
         .limit(1)
         .maybeSingle();
 
-      return data;
+      return data as any;
     },
   });
 

@@ -7,7 +7,7 @@ import { Progress } from "@/components/ui/progress";
 import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/hooks/use-toast";
 import { useAutoRetry } from "@/hooks/useAutoRetry";
-import { Loader2, Clock, CheckCircle2, AlertCircle, Play } from "lucide-react";
+import { Loader2, Clock, CheckCircle2, AlertCircle, Play, RefreshCw } from "lucide-react";
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
 

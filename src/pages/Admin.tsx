@@ -4,13 +4,13 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Button } from "@/components/ui/button";
 import { Shield, Database, Download, Settings, ArrowLeft, BarChart3 } from "lucide-react";
 import { useIsAdmin } from "@/hooks/useIsAdmin";
-import DataProcessControl from "@/components/admin/DataProcessControl";
+import { DataProcessControl } from "@/components/admin/DataProcessControl";
 import FileQueueManager from "@/components/FileQueueManager";
-import SystemHealth from "@/components/admin/SystemHealth";
-import SyncProgress from "@/components/admin/SyncProgress";
+import { SystemHealth } from "@/components/admin/SystemHealth";
+import { SyncProgress } from "@/components/admin/SyncProgress";
 import RiksdagenDataFetchConfig from "@/components/admin/RiksdagenDataFetchConfig";
-import DatabaseStats from "@/components/admin/DatabaseStats";
-import AdminSetup from "@/components/admin/AdminSetup";
+import { DatabaseStats } from "@/components/admin/DatabaseStats";
+import { AdminSetup } from "@/components/admin/AdminSetup";
 import StorageBrowser from "@/components/admin/StorageBrowser";
 import ActivityStream from "@/components/admin/ActivityStream";
 import AdminNotifications from "@/components/admin/AdminNotifications";
@@ -18,6 +18,7 @@ import StorageQuota from "@/components/admin/StorageQuota";
 import DataFetchTimeline from "@/components/admin/DataFetchTimeline";
 import FileIntegrityCheck from "@/components/admin/FileIntegrityCheck";
 import BatchOperations from "@/components/admin/BatchOperations";
+import RiksdagenApiInfo from "@/components/admin/RiksdagenApiInfo";
 import { Skeleton } from "@/components/ui/skeleton";
 
 const Admin = () => {

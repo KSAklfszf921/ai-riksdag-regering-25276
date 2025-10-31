@@ -240,9 +240,21 @@ Deno.serve(async (req) => {
     const data = await response.json();
     console.log('Data hämtad från g0v.se API');
 
+    // Batching configuration to prevent resource exhaustion
+    const BATCH_SIZE = 100; // Process max 100 items per execution
     let insertedCount = 0;
     let errors = 0;
     let totalItems = 0;
+    let processedItems = 0;
+
+    // Get current progress to support resumption
+    const { data: currentProgress } = await supabaseClient
+      .from('data_fetch_progress')
+      .select('items_fetched')
+      .eq('data_type', dataType)
+      .single();
+    
+    const startIndex = currentProgress?.items_fetched || 0;
 
     if (dataType === 'pressmeddelanden' && Array.isArray(data)) {
       const items = data;
@@ -250,7 +262,13 @@ Deno.serve(async (req) => {
       
       await updateProgress(supabaseClient, dataType, { total_items: totalItems });
       
-      for (const item of items) {
+      // Process only a batch of items to avoid resource exhaustion
+      const endIndex = Math.min(startIndex + BATCH_SIZE, items.length);
+      const itemsToProcess = items.slice(startIndex, endIndex);
+      
+      console.log(`Bearbetar items ${startIndex + 1}-${endIndex} av ${totalItems}`);
+      
+      for (const item of itemsToProcess) {
         // Kontrollera stoppsignal
         if (await shouldStop(supabaseClient, dataType)) {
           console.log('Stoppsignal mottagen, avbryter hämtning');
@@ -306,10 +324,21 @@ Deno.serve(async (req) => {
           } else {
             insertedCount++;
           }
+          processedItems++;
         } catch (err) {
           console.error('Fel vid bearbetning:', err);
           errors++;
+          processedItems++;
         }
+      }
+      
+      // Check if more items remain
+      const hasMoreItems = endIndex < totalItems;
+      const finalStatus = hasMoreItems ? 'in_progress' : 'completed';
+      
+      console.log(`Batch complete: ${insertedCount} inserted, ${errors} errors. Status: ${finalStatus}`);
+      if (hasMoreItems) {
+        console.log(`${totalItems - endIndex} items remaining. Call function again to continue.`);
       }
     } else if (dataType === 'propositioner' && Array.isArray(data)) {
       const items = data;
@@ -317,7 +346,13 @@ Deno.serve(async (req) => {
       
       await updateProgress(supabaseClient, dataType, { total_items: totalItems });
       
-      for (const item of items) {
+      // Process only a batch of items
+      const endIndex = Math.min(startIndex + BATCH_SIZE, items.length);
+      const itemsToProcess = items.slice(startIndex, endIndex);
+      
+      console.log(`Bearbetar items ${startIndex + 1}-${endIndex} av ${totalItems}`);
+      
+      for (const item of itemsToProcess) {
         // Kontrollera stoppsignal
         if (await shouldStop(supabaseClient, dataType)) {
           console.log('Stoppsignal mottagen, avbryter hämtning');
@@ -372,10 +407,21 @@ Deno.serve(async (req) => {
           } else {
             insertedCount++;
           }
+          processedItems++;
         } catch (err) {
           console.error('Fel vid bearbetning:', err);
           errors++;
+          processedItems++;
         }
+      }
+      
+      // Check if more items remain
+      const hasMoreItems = endIndex < totalItems;
+      const finalStatus = hasMoreItems ? 'in_progress' : 'completed';
+      
+      console.log(`Batch complete: ${insertedCount} inserted, ${errors} errors. Status: ${finalStatus}`);
+      if (hasMoreItems) {
+        console.log(`${totalItems - endIndex} items remaining. Call function again to continue.`);
       }
     } else if (dataType === 'kategorier' && typeof data === 'object') {
       // Kategorier kommer som objekt med koder som nycklar
@@ -384,7 +430,13 @@ Deno.serve(async (req) => {
       
       await updateProgress(supabaseClient, dataType, { total_items: totalItems });
       
-      for (const [kod, namn] of entries) {
+      // Process only a batch
+      const endIndex = Math.min(startIndex + BATCH_SIZE, entries.length);
+      const entriesToProcess = entries.slice(startIndex, endIndex);
+      
+      console.log(`Bearbetar items ${startIndex + 1}-${endIndex} av ${totalItems}`);
+      
+      for (const [kod, namn] of entriesToProcess) {
         // Kontrollera stoppsignal
         if (await shouldStop(supabaseClient, dataType)) {
           console.log('Stoppsignal mottagen, avbryter hämtning');
@@ -411,10 +463,21 @@ Deno.serve(async (req) => {
           } else {
             insertedCount++;
           }
+          processedItems++;
         } catch (err) {
           console.error('Fel vid bearbetning:', err);
           errors++;
+          processedItems++;
         }
+      }
+      
+      // Check if more items remain
+      const hasMoreItems = endIndex < totalItems;
+      const finalStatus = hasMoreItems ? 'in_progress' : 'completed';
+      
+      console.log(`Batch complete: ${insertedCount} inserted, ${errors} errors. Status: ${finalStatus}`);
+      if (hasMoreItems) {
+        console.log(`${totalItems - endIndex} items remaining. Call function again to continue.`);
       }
     } else if (Array.isArray(data)) {
       // Hantera alla andra dokumenttyper med standardformat
@@ -423,7 +486,13 @@ Deno.serve(async (req) => {
       
       await updateProgress(supabaseClient, dataType, { total_items: totalItems });
       
-      for (const item of items) {
+      // Process only a batch
+      const endIndex = Math.min(startIndex + BATCH_SIZE, items.length);
+      const itemsToProcess = items.slice(startIndex, endIndex);
+      
+      console.log(`Bearbetar items ${startIndex + 1}-${endIndex} av ${totalItems}`);
+      
+      for (const item of itemsToProcess) {
         // Kontrollera stoppsignal
         if (await shouldStop(supabaseClient, dataType)) {
           console.log('Stoppsignal mottagen, avbryter hämtning');
@@ -483,35 +552,56 @@ Deno.serve(async (req) => {
           } else {
             insertedCount++;
           }
+          processedItems++;
         } catch (err) {
           console.error('Fel vid bearbetning:', err);
           errors++;
+          processedItems++;
         }
+      }
+      
+      // Check if more items remain
+      const hasMoreItems = endIndex < totalItems;
+      const finalStatus = hasMoreItems ? 'in_progress' : 'completed';
+      
+      console.log(`Batch complete: ${insertedCount} inserted, ${errors} errors. Status: ${finalStatus}`);
+      if (hasMoreItems) {
+        console.log(`${totalItems - endIndex} items remaining. Call function again to continue.`);
       }
     }
 
-    // Uppdatera progress till completed
+    // Uppdatera progress med batchad status
+    const totalProcessed = startIndex + processedItems;
+    const isComplete = totalProcessed >= totalItems;
+    const batchStatus = isComplete ? 'completed' : 'in_progress';
+    
     await updateProgress(supabaseClient, dataType, {
-      items_fetched: insertedCount,
-      status: 'completed'
+      items_fetched: totalProcessed,
+      total_items: totalItems,
+      status: batchStatus
     });
 
     // Logga API-anropet
     await supabaseClient.from('regeringskansliet_api_log').insert({
       endpoint: dataType,
-      status: 'success',
+      status: isComplete ? 'success' : 'partial',
       antal_poster: insertedCount,
-      felmeddelande: errors > 0 ? `${errors} fel uppstod` : null,
+      felmeddelande: errors > 0 ? `${errors} fel uppstod i batch` : null,
     });
 
-    console.log(`Slutfört! Infogade ${insertedCount} poster, ${errors} fel.`);
+    console.log(`Batch slutfört! Infogade ${insertedCount} poster, ${errors} fel. Progress: ${totalProcessed}/${totalItems}`);
 
     return new Response(
       JSON.stringify({ 
         success: true, 
         inserted: insertedCount,
         errors: errors,
-        message: `Hämtade och sparade ${insertedCount} ${dataType}` 
+        totalProcessed: totalProcessed,
+        totalItems: totalItems,
+        complete: isComplete,
+        message: isComplete 
+          ? `Hämtade och sparade ${totalProcessed} ${dataType}` 
+          : `Bearbetade batch: ${insertedCount} items. ${totalItems - totalProcessed} kvarstår. Anropa funktionen igen för att fortsätta.`
       }),
       { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     );

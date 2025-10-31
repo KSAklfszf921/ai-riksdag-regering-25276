@@ -1,61 +1,67 @@
 import { Link } from "react-router-dom";
-import { FileText, Newspaper, Scale, Database } from "lucide-react";
+import { FileText, Newspaper, Scale, Database, Book, MessageSquare, Globe, Folder } from "lucide-react";
 import { Card, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { useQuery } from "@tanstack/react-query";
-import { supabase } from "@/integrations/supabase/client";
-import StatsCard from "@/components/StatsCard";
 import DataFetchButton from "@/components/DataFetchButton";
 import ProgressTracker from "@/components/ProgressTracker";
-import { Skeleton } from "@/components/ui/skeleton";
+import FileQueueManager from "@/components/FileQueueManager";
 
 const Regeringskansliet = () => {
-  const { data: stats, isLoading: statsLoading } = useQuery({
-    queryKey: ['regeringskansliet-stats'],
-    queryFn: async () => {
-      const [dokument, pressmeddelanden, propositioner, kategorier] = await Promise.all([
-        supabase.from('regeringskansliet_dokument').select('id', { count: 'exact', head: true }),
-        supabase.from('regeringskansliet_pressmeddelanden').select('id', { count: 'exact', head: true }),
-        supabase.from('regeringskansliet_propositioner').select('id', { count: 'exact', head: true }),
-        supabase.from('regeringskansliet_kategorier').select('id', { count: 'exact', head: true }),
-      ]);
-      
-      return {
-        dokument: dokument.count || 0,
-        pressmeddelanden: pressmeddelanden.count || 0,
-        propositioner: propositioner.count || 0,
-        kategorier: kategorier.count || 0,
-      };
-    },
-  });
-
-  const sections = [
+  const documentCategories = [
     {
-      title: "Pressmeddelanden",
-      description: "Senaste pressmeddelanden från regeringen och departementen",
-      icon: Newspaper,
-      href: "/regeringskansliet/pressmeddelanden",
-      color: "text-blue-600"
-    },
-    {
-      title: "Propositioner",
-      description: "Lagförslag och propositioner från regeringen",
+      title: "Rättsliga dokument",
       icon: Scale,
-      href: "/regeringskansliet/propositioner",
-      color: "text-purple-600"
+      color: "text-purple-600",
+      items: [
+        { title: "Propositioner", href: "/regeringskansliet/propositioner", description: "Lagförslag från regeringen" },
+        { title: "Departementsserien (Ds)", href: "/regeringskansliet/departementsserien", description: "Utredningar från departementen" },
+        { title: "SOU", href: "/regeringskansliet/sou", description: "Statens offentliga utredningar" },
+        { title: "Skrivelser", href: "/regeringskansliet/skrivelse", description: "Regeringens skrivelser" },
+        { title: "Förordningsmotiv", href: "/regeringskansliet/forordningsmotiv", description: "Motiv till förordningar" },
+        { title: "Kommittédirektiv", href: "/regeringskansliet/kommittedirektiv", description: "Direktiv till utredningar" },
+        { title: "Lagradsremisser", href: "/regeringskansliet/lagradsremiss", description: "Remisser till Lagrådet" },
+        { title: "Remisser", href: "/regeringskansliet/remisser", description: "Remissförfaranden" },
+        { title: "Regeringsärenden", href: "/regeringskansliet/regeringsarenden", description: "Ärenden behandlade av regeringen" },
+        { title: "Regeringsuppdrag", href: "/regeringskansliet/regeringsuppdrag", description: "Uppdrag till myndigheter" },
+        { title: "Sakråd", href: "/regeringskansliet/sakrad", description: "Sakråd och expertråd" },
+      ]
     },
     {
-      title: "Dokument",
-      description: "Alla dokument från regeringen.se i strukturerad form",
-      icon: FileText,
-      href: "/regeringskansliet/dokument",
-      color: "text-green-600"
+      title: "Kommunikation",
+      icon: Newspaper,
+      color: "text-blue-600",
+      items: [
+        { title: "Pressmeddelanden", href: "/regeringskansliet/pressmeddelanden", description: "Pressmeddelanden från regeringen" },
+        { title: "Artiklar", href: "/regeringskansliet/artiklar", description: "Artiklar från regeringskansliet" },
+        { title: "Debattartiklar", href: "/regeringskansliet/debattartiklar", description: "Debattartiklar från regeringen" },
+        { title: "Tal", href: "/regeringskansliet/tal", description: "Tal av statsministern och ministrarna" },
+        { title: "Uttalanden", href: "/regeringskansliet/uttalanden", description: "Uttalanden från regeringen" },
+      ]
     },
     {
-      title: "Kategorier",
-      description: "Dokumentkategorier och klassificeringar",
-      icon: Database,
-      href: "/regeringskansliet/kategorier",
-      color: "text-orange-600"
+      title: "Internationellt",
+      icon: Globe,
+      color: "text-green-600",
+      items: [
+        { title: "MR-granskningar", href: "/regeringskansliet/mr-granskningar", description: "Mänskliga rättigheter - granskningar" },
+        { title: "Biståndsstrategier", href: "/regeringskansliet/bistands-strategier", description: "Strategier för utvecklingssamarbete" },
+        { title: "UD avråder", href: "/regeringskansliet/ud-avrader", description: "Utrikesdepartementets reseavråden" },
+        { title: "Internationella överenskommelser", href: "/regeringskansliet/internationella-overenskommelser", description: "Internationella fördrag och avtal" },
+        { title: "Faktapromemorior", href: "/regeringskansliet/faktapromemoria", description: "Faktapromemorior om EU-ärenden" },
+      ]
+    },
+    {
+      title: "Övrigt",
+      icon: Folder,
+      color: "text-orange-600",
+      items: [
+        { title: "Dokument", href: "/regeringskansliet/dokument", description: "Alla dokument från regeringen.se" },
+        { title: "Kategorier", href: "/regeringskansliet/kategorier", description: "Dokumentkategorier" },
+        { title: "Dagordningar", href: "/regeringskansliet/dagordningar", description: "Dagordningar för regeringssammanträden" },
+        { title: "Rapporter", href: "/regeringskansliet/rapporter", description: "Rapporter från regeringskansliet" },
+        { title: "Överenskommelser & avtal", href: "/regeringskansliet/overenskommelser-avtal", description: "Överenskommelser med organisationer" },
+        { title: "Ärendeförteckningar", href: "/regeringskansliet/arendeforteckningar", description: "Förteckningar över ärenden" },
+        { title: "Informationsmaterial", href: "/regeringskansliet/informationsmaterial", description: "Informationsmaterial" },
+      ]
     }
   ];
 
@@ -63,7 +69,7 @@ const Regeringskansliet = () => {
     <div className="min-h-screen bg-background">
       <div className="w-full bg-primary py-1"></div>
       
-      <div className="container mx-auto px-4 py-12 md:py-20 max-w-6xl">
+      <div className="container mx-auto px-4 py-12 md:py-20 max-w-7xl">
         <header className="text-center mb-16">
           <div className="flex justify-between items-center mb-6">
             <div className="flex-1" />
@@ -84,70 +90,37 @@ const Regeringskansliet = () => {
           </p>
         </header>
 
-        {/* Statistics */}
         <ProgressTracker source="regeringskansliet" />
-        
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-12">
-          {statsLoading ? (
-            <>
-              {[...Array(4)].map((_, i) => (
-                <Card key={i}>
-                  <CardHeader className="pb-2">
-                    <Skeleton className="h-4 w-20" />
-                  </CardHeader>
-                  <Skeleton className="h-8 w-16 mx-6 mb-6" />
-                </Card>
-              ))}
-            </>
-          ) : (
-            <>
-              <StatsCard
-                title="Dokument"
-                value={stats?.dokument || 0}
-                icon={FileText}
-                iconColor="text-green-600"
-              />
-              <StatsCard
-                title="Pressmeddelanden"
-                value={stats?.pressmeddelanden || 0}
-                icon={Newspaper}
-                iconColor="text-blue-600"
-              />
-              <StatsCard
-                title="Propositioner"
-                value={stats?.propositioner || 0}
-                icon={Scale}
-                iconColor="text-purple-600"
-              />
-              <StatsCard
-                title="Kategorier"
-                value={stats?.kategorier || 0}
-                icon={Database}
-                iconColor="text-orange-600"
-              />
-            </>
-          )}
-        </div>
+        <FileQueueManager />
 
-        <div className="grid md:grid-cols-2 gap-6 mb-12">
-          {sections.map((section) => (
-            <Link key={section.href} to={section.href}>
-              <Card className="h-full transition-all hover:shadow-lg hover:scale-105 cursor-pointer">
-                <CardHeader>
-                  <div className="flex items-center gap-3 mb-2">
-                    <section.icon className={`h-8 w-8 ${section.color}`} />
-                    <CardTitle className="text-2xl">{section.title}</CardTitle>
-                  </div>
-                  <CardDescription className="text-base">
-                    {section.description}
-                  </CardDescription>
-                </CardHeader>
-              </Card>
-            </Link>
+        {/* Document Categories */}
+        <div className="space-y-12">
+          {documentCategories.map((category) => (
+            <div key={category.title}>
+              <div className="flex items-center gap-3 mb-6">
+                <category.icon className={`h-6 w-6 ${category.color}`} />
+                <h2 className="text-2xl font-bold">{category.title}</h2>
+              </div>
+              
+              <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
+                {category.items.map((item) => (
+                  <Link key={item.href} to={item.href}>
+                    <Card className="h-full transition-all hover:shadow-lg hover:scale-105 cursor-pointer">
+                      <CardHeader>
+                        <CardTitle className="text-lg">{item.title}</CardTitle>
+                        <CardDescription className="text-sm">
+                          {item.description}
+                        </CardDescription>
+                      </CardHeader>
+                    </Card>
+                  </Link>
+                ))}
+              </div>
+            </div>
           ))}
         </div>
 
-        <div className="text-center">
+        <div className="text-center mt-12">
           <Link 
             to="/" 
             className="text-primary hover:underline inline-flex items-center gap-2"

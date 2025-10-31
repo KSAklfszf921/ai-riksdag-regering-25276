@@ -39,6 +39,7 @@ import RegeringskanslientLagradsremiss from "./pages/RegeringskanslientLagradsre
 import RegeringskanslientForordningsmotiv from "./pages/RegeringskanslientForordningsmotiv";
 import RegeringskanslientInternationellaOverenskommelser from "./pages/RegeringskanslientInternationellaOverenskommelser";
 import Admin from "./pages/Admin";
+import Login from "./pages/Login";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -86,6 +87,7 @@ const App = () => (
           <Route path="/regeringskansliet/forordningsmotiv" element={<RegeringskanslientForordningsmotiv />} />
           <Route path="/regeringskansliet/internationella-overenskommelser" element={<RegeringskanslientInternationellaOverenskommelser />} />
           <Route path="/admin" element={<Admin />} />
+          <Route path="/login" element={<Login />} />
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
           <Route path="*" element={<NotFound />} />
         </Routes>

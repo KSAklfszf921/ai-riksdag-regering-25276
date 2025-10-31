@@ -6,20 +6,26 @@ import { Shield, Database, Download, Settings, ArrowLeft, BarChart3 } from "luci
 import { useIsAdmin } from "@/hooks/useIsAdmin";
 import { DataProcessControl } from "@/components/admin/DataProcessControl";
 import FileQueueManager from "@/components/FileQueueManager";
-import { SystemHealth } from "@/components/admin/SystemHealth";
 import { SyncProgress } from "@/components/admin/SyncProgress";
 import RiksdagenDataFetchConfig from "@/components/admin/RiksdagenDataFetchConfig";
 import { DatabaseStats } from "@/components/admin/DatabaseStats";
 import { AdminSetup } from "@/components/admin/AdminSetup";
-import StorageBrowser from "@/components/admin/StorageBrowser";
+import StorageBrowserImproved from "@/components/admin/StorageBrowserImproved";
 import ActivityStream from "@/components/admin/ActivityStream";
-import AdminNotifications from "@/components/admin/AdminNotifications";
 import StorageQuota from "@/components/admin/StorageQuota";
 import DataFetchTimeline from "@/components/admin/DataFetchTimeline";
 import FileIntegrityCheck from "@/components/admin/FileIntegrityCheck";
 import BatchOperations from "@/components/admin/BatchOperations";
 import RiksdagenApiInfo from "@/components/admin/RiksdagenApiInfo";
 import { Skeleton } from "@/components/ui/skeleton";
+import { SystemHealthCompact } from "@/components/admin/SystemHealthCompact";
+import { AdminNotificationsCritical } from "@/components/admin/AdminNotificationsCritical";
+import { DashboardQuickStats } from "@/components/admin/DashboardQuickStats";
+import { AdminActionCenter } from "@/components/admin/AdminActionCenter";
+import { StorageCleanup } from "@/components/admin/StorageCleanup";
+import FileQueueManagerImproved from "@/components/admin/FileQueueManagerImproved";
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
+import { ChevronDown, AlertCircle } from "lucide-react";
 
 const Admin = () => {
   const { isAdmin, isLoading } = useIsAdmin();
@@ -86,20 +92,46 @@ const Admin = () => {
           </TabsList>
 
           <TabsContent value="overview" className="space-y-6">
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-              <SystemHealth />
-              <StorageQuota />
-            </div>
-            <AdminNotifications />
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-              <ActivityStream />
-              <div className="space-y-6">
-                <FileIntegrityCheck />
-                <BatchOperations />
+            {/* KRITISK SEKTION */}
+            <div className="space-y-4 p-4 border-2 border-destructive/20 rounded-lg bg-destructive/5">
+              <h2 className="text-xl font-bold flex items-center gap-2">
+                <AlertCircle className="h-5 w-5 text-destructive" />
+                System Status
+              </h2>
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+                <SystemHealthCompact />
+                <AdminNotificationsCritical />
               </div>
             </div>
-            <DataFetchTimeline />
-            <DatabaseStats />
+
+            {/* QUICK STATS */}
+            <DashboardQuickStats />
+
+            {/* HUVUDSEKTION */}
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+              <AdminActionCenter />
+              <FileQueueManagerImproved />
+            </div>
+
+            {/* DETALJSEKTION (Collapsible) */}
+            <Collapsible>
+              <CollapsibleTrigger className="flex items-center gap-2 text-lg font-semibold hover:underline">
+                <ChevronDown className="h-5 w-5" />
+                Visa detaljerad statistik & verktyg
+              </CollapsibleTrigger>
+              <CollapsibleContent className="space-y-6 mt-6">
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                  <StorageQuota />
+                  <ActivityStream />
+                </div>
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                  <FileIntegrityCheck />
+                  <BatchOperations />
+                </div>
+                <DataFetchTimeline />
+                <DatabaseStats />
+              </CollapsibleContent>
+            </Collapsible>
           </TabsContent>
 
           <TabsContent value="riksdagen" className="space-y-4">
@@ -135,8 +167,12 @@ const Admin = () => {
           </TabsContent>
 
           <TabsContent value="files" className="space-y-6">
-            <FileQueueManager />
-            <StorageBrowser />
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+              <FileQueueManagerImproved />
+              <StorageQuota />
+            </div>
+            <StorageBrowserImproved />
+            <StorageCleanup />
           </TabsContent>
 
           <TabsContent value="settings" className="space-y-6">

@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { Link } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
@@ -7,10 +7,22 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Badge } from "@/components/ui/badge";
-import { Search, FileText, Calendar, User, Download, ArrowLeft } from "lucide-react";
+import { Search, FileText, Calendar, User, Download, ArrowLeft, FileDown, ChevronLeft, ChevronRight } from "lucide-react";
 import EmptyState from "@/components/EmptyState";
 import ProgressTracker from "@/components/ProgressTracker";
+import { FavoriteButton } from "@/components/FavoriteButton";
+import { AdvancedFilters } from "@/components/AdvancedFilters";
+import { useDocumentAnalytics } from "@/hooks/useDocumentAnalytics";
+import { exportToCSV, exportToJSON } from "@/lib/exportUtils";
 import { format } from "date-fns";
+import {
+  Pagination,
+  PaginationContent,
+  PaginationItem,
+  PaginationLink,
+  PaginationNext,
+  PaginationPrevious,
+} from "@/components/ui/pagination";
 
 interface GenericDocumentPageProps {
   tableName: string;
@@ -35,14 +47,28 @@ export const GenericDocumentPage = ({
 }: GenericDocumentPageProps) => {
   const [searchQuery, setSearchQuery] = useState("");
   const [sortBy, setSortBy] = useState("datum");
+  const [currentPage, setCurrentPage] = useState(1);
+  const [dateFrom, setDateFrom] = useState("");
+  const [dateTo, setDateTo] = useState("");
+  const [selectedCategories, setSelectedCategories] = useState<string[]>([]);
+  const itemsPerPage = 20;
+  const { trackView } = useDocumentAnalytics();
 
   const { data: documents, isLoading } = useQuery({
-    queryKey: [tableName, searchQuery, sortBy],
+    queryKey: [tableName, searchQuery, sortBy, dateFrom, dateTo, selectedCategories],
     queryFn: async () => {
       let query = supabase.from(tableName as any).select("*");
 
       if (searchQuery) {
         query = query.or(`titel.ilike.%${searchQuery}%,document_id.ilike.%${searchQuery}%,beteckningsnummer.ilike.%${searchQuery}%`);
+      }
+
+      if (dateFrom) {
+        query = query.gte(dateColumn, dateFrom);
+      }
+
+      if (dateTo) {
+        query = query.lte(dateColumn, dateTo);
       }
 
       const sortColumn = sortBy === "datum" ? dateColumn : titleColumn;
@@ -53,6 +79,68 @@ export const GenericDocumentPage = ({
       return data;
     },
   });
+
+  // Extract unique categories from documents
+  const availableCategories = useMemo(() => {
+    if (!documents) return [];
+    const categories = new Set<string>();
+    documents.forEach((doc: any) => {
+      if (doc.kategorier && Array.isArray(doc.kategorier)) {
+        doc.kategorier.forEach((cat: string) => categories.add(cat));
+      }
+    });
+    return Array.from(categories).sort();
+  }, [documents]);
+
+  // Filter documents by category
+  const filteredDocuments = useMemo(() => {
+    if (!documents) return [];
+    if (selectedCategories.length === 0) return documents;
+    
+    return documents.filter((doc: any) => {
+      if (!doc.kategorier || !Array.isArray(doc.kategorier)) return false;
+      return selectedCategories.some((cat) => doc.kategorier.includes(cat));
+    });
+  }, [documents, selectedCategories]);
+
+  // Pagination
+  const totalPages = Math.ceil((filteredDocuments?.length || 0) / itemsPerPage);
+  const paginatedDocuments = useMemo(() => {
+    const start = (currentPage - 1) * itemsPerPage;
+    return filteredDocuments?.slice(start, start + itemsPerPage) || [];
+  }, [filteredDocuments, currentPage]);
+
+  const handleCategoryToggle = (category: string) => {
+    setSelectedCategories((prev) =>
+      prev.includes(category) ? prev.filter((c) => c !== category) : [...prev, category]
+    );
+    setCurrentPage(1);
+  };
+
+  const handleClearFilters = () => {
+    setDateFrom("");
+    setDateTo("");
+    setSelectedCategories([]);
+    setCurrentPage(1);
+  };
+
+  const handleExportCSV = () => {
+    if (!filteredDocuments || filteredDocuments.length === 0) return;
+    const exportData = filteredDocuments.map((doc: any) => ({
+      titel: doc.titel,
+      document_id: doc.document_id,
+      beteckningsnummer: doc.beteckningsnummer,
+      publicerad_datum: doc.publicerad_datum,
+      avsandare: doc.avsandare || doc.departement,
+      kategorier: doc.kategorier?.join("; "),
+    }));
+    exportToCSV(exportData, `${title.toLowerCase().replace(/\s+/g, "-")}-${new Date().toISOString().split("T")[0]}`);
+  };
+
+  const handleExportJSON = () => {
+    if (!filteredDocuments || filteredDocuments.length === 0) return;
+    exportToJSON(filteredDocuments, `${title.toLowerCase().replace(/\s+/g, "-")}-${new Date().toISOString().split("T")[0]}`);
+  };
 
   const renderLocalFiles = (localFiles: any) => {
     if (!localFiles) return null;
@@ -103,8 +191,8 @@ export const GenericDocumentPage = ({
 
           <ProgressTracker source={source} />
 
-          <div className="flex gap-4 items-center mb-6">
-            <div className="relative flex-1">
+          <div className="flex flex-wrap gap-4 items-center mb-6">
+            <div className="relative flex-1 min-w-[300px]">
               <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
               <Input
                 placeholder="Sök efter titel, dokumentnummer eller beteckning..."
@@ -121,7 +209,33 @@ export const GenericDocumentPage = ({
               <option value="datum">Sortera efter datum</option>
               <option value="titel">Sortera efter titel</option>
             </select>
+            <AdvancedFilters
+              dateFrom={dateFrom}
+              dateTo={dateTo}
+              selectedCategories={selectedCategories}
+              availableCategories={availableCategories}
+              onDateFromChange={setDateFrom}
+              onDateToChange={setDateTo}
+              onCategoryToggle={handleCategoryToggle}
+              onClearFilters={handleClearFilters}
+            />
+            <Button variant="outline" onClick={handleExportCSV} disabled={!filteredDocuments || filteredDocuments.length === 0}>
+              <FileDown className="h-4 w-4 mr-2" />
+              Exportera CSV
+            </Button>
+            <Button variant="outline" onClick={handleExportJSON} disabled={!filteredDocuments || filteredDocuments.length === 0}>
+              <FileDown className="h-4 w-4 mr-2" />
+              Exportera JSON
+            </Button>
           </div>
+
+          {(dateFrom || dateTo || selectedCategories.length > 0) && (
+            <div className="mb-4 p-3 bg-muted rounded-md">
+              <p className="text-sm text-muted-foreground">
+                Visar {filteredDocuments?.length || 0} av {documents?.length || 0} dokument
+              </p>
+            </div>
+          )}
         </div>
 
         {isLoading ? (
@@ -135,21 +249,22 @@ export const GenericDocumentPage = ({
               </Card>
             ))}
           </div>
-        ) : !documents || documents.length === 0 ? (
+        ) : !paginatedDocuments || paginatedDocuments.length === 0 ? (
           <EmptyState
             message={`Inga ${title.toLowerCase()} hittades`}
-            suggestion={searchQuery ? "Prova att ändra din sökning" : `Använd knappen ovan för att hämta ${title.toLowerCase()}`}
+            suggestion={searchQuery || dateFrom || dateTo || selectedCategories.length > 0 ? "Prova att ändra dina filter" : `Använd knappen ovan för att hämta ${title.toLowerCase()}`}
           />
         ) : (
-          <div className="space-y-4">
-            {documents.map((doc: any) => (
-              <Card key={doc.id} className="hover:shadow-md transition-shadow">
-                <CardHeader>
-                  <div className="flex items-start justify-between">
-                    <div className="flex-1">
-                      <CardTitle className="text-xl mb-2">
-                        {doc.titel || doc.document_id}
-                      </CardTitle>
+          <>
+            <div className="space-y-4">
+              {paginatedDocuments.map((doc: any) => (
+                <Card key={doc.id} className="hover:shadow-md transition-shadow">
+                  <CardHeader>
+                    <div className="flex items-start justify-between gap-4">
+                      <div className="flex-1">
+                        <CardTitle className="text-xl mb-2">
+                          {doc.titel || doc.document_id}
+                        </CardTitle>
                       <CardDescription className="space-y-1">
                         {doc.beteckningsnummer && (
                           <div className="flex items-center gap-2">
@@ -173,15 +288,18 @@ export const GenericDocumentPage = ({
                         )}
                       </CardDescription>
                     </div>
-                    {doc.kategorier && doc.kategorier.length > 0 && (
-                      <div className="flex flex-wrap gap-1 ml-4">
-                        {doc.kategorier.slice(0, 3).map((kat: string, idx: number) => (
-                          <Badge key={idx} variant="secondary" className="text-xs">
-                            {kat}
-                          </Badge>
-                        ))}
-                      </div>
-                    )}
+                    <div className="flex items-start gap-2">
+                      {doc.kategorier && doc.kategorier.length > 0 && (
+                        <div className="flex flex-wrap gap-1">
+                          {doc.kategorier.slice(0, 3).map((kat: string, idx: number) => (
+                            <Badge key={idx} variant="secondary" className="text-xs">
+                              {kat}
+                            </Badge>
+                          ))}
+                        </div>
+                      )}
+                      <FavoriteButton tableName={tableName} documentId={doc.document_id} />
+                    </div>
                   </div>
                 </CardHeader>
                 <CardContent>
@@ -193,7 +311,11 @@ export const GenericDocumentPage = ({
                   <div className="flex flex-wrap gap-2">
                     {doc.url && (
                       <a href={doc.url} target="_blank" rel="noopener noreferrer">
-                        <Button variant="outline" size="sm">
+                        <Button 
+                          variant="outline" 
+                          size="sm"
+                          onClick={() => trackView({ tableName, documentId: doc.document_id })}
+                        >
                           <FileText className="h-4 w-4 mr-2" />
                           Visa original
                         </Button>
@@ -221,6 +343,57 @@ export const GenericDocumentPage = ({
               </Card>
             ))}
           </div>
+
+          {totalPages > 1 && (
+            <div className="mt-8">
+              <Pagination>
+                <PaginationContent>
+                  <PaginationItem>
+                    <PaginationPrevious
+                      onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
+                      className={currentPage === 1 ? "pointer-events-none opacity-50" : "cursor-pointer"}
+                    />
+                  </PaginationItem>
+                  
+                  {Array.from({ length: totalPages }, (_, i) => i + 1)
+                    .filter((page) => {
+                      if (totalPages <= 7) return true;
+                      if (page === 1 || page === totalPages) return true;
+                      if (page >= currentPage - 1 && page <= currentPage + 1) return true;
+                      return false;
+                    })
+                    .map((page, idx, arr) => {
+                      if (idx > 0 && page - arr[idx - 1] > 1) {
+                        return (
+                          <PaginationItem key={`ellipsis-${page}`}>
+                            <span className="px-4">...</span>
+                          </PaginationItem>
+                        );
+                      }
+                      return (
+                        <PaginationItem key={page}>
+                          <PaginationLink
+                            onClick={() => setCurrentPage(page)}
+                            isActive={currentPage === page}
+                            className="cursor-pointer"
+                          >
+                            {page}
+                          </PaginationLink>
+                        </PaginationItem>
+                      );
+                    })}
+
+                  <PaginationItem>
+                    <PaginationNext
+                      onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
+                      className={currentPage === totalPages ? "pointer-events-none opacity-50" : "cursor-pointer"}
+                    />
+                  </PaginationItem>
+                </PaginationContent>
+              </Pagination>
+            </div>
+          )}
+        </>
         )}
       </div>
     </div>

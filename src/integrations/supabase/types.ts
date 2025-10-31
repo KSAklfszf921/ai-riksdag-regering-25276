@@ -83,6 +83,60 @@ export type Database = {
         }
         Relationships: []
       }
+      document_analytics: {
+        Row: {
+          created_at: string
+          document_id: string
+          id: string
+          last_viewed_at: string | null
+          table_name: string
+          updated_at: string
+          view_count: number
+        }
+        Insert: {
+          created_at?: string
+          document_id: string
+          id?: string
+          last_viewed_at?: string | null
+          table_name: string
+          updated_at?: string
+          view_count?: number
+        }
+        Update: {
+          created_at?: string
+          document_id?: string
+          id?: string
+          last_viewed_at?: string | null
+          table_name?: string
+          updated_at?: string
+          view_count?: number
+        }
+        Relationships: []
+      }
+      favorites: {
+        Row: {
+          created_at: string
+          document_id: string
+          id: string
+          table_name: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          document_id: string
+          id?: string
+          table_name: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          document_id?: string
+          id?: string
+          table_name?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       file_download_queue: {
         Row: {
           attempts: number | null
@@ -131,6 +185,30 @@ export type Database = {
           status?: string | null
           storage_path?: string
           table_name?: string
+        }
+        Relationships: []
+      }
+      profiles: {
+        Row: {
+          auth_user_id: string
+          created_at: string
+          email: string | null
+          updated_at: string
+          user_role: string | null
+        }
+        Insert: {
+          auth_user_id: string
+          created_at?: string
+          email?: string | null
+          updated_at?: string
+          user_role?: string | null
+        }
+        Update: {
+          auth_user_id?: string
+          created_at?: string
+          email?: string | null
+          updated_at?: string
+          user_role?: string | null
         }
         Relationships: []
       }
@@ -1877,6 +1955,10 @@ export type Database = {
           _user_id: string
         }
         Returns: boolean
+      }
+      increment_document_view: {
+        Args: { p_document_id: string; p_table_name: string }
+        Returns: undefined
       }
       is_admin: { Args: never; Returns: boolean }
     }

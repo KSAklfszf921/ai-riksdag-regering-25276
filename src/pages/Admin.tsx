@@ -10,6 +10,8 @@ import { AdminSetup } from "@/components/admin/AdminSetup";
 import { SyncProgress } from "@/components/admin/SyncProgress";
 import { SystemHealth } from "@/components/admin/SystemHealth";
 import { Skeleton } from "@/components/ui/skeleton";
+import RiksdagenApiInfo from "@/components/admin/RiksdagenApiInfo";
+import RiksdagenDataFetchConfig from "@/components/admin/RiksdagenDataFetchConfig";
 
 const Admin = () => {
   const { isAdmin, isLoading } = useIsAdmin();
@@ -72,6 +74,8 @@ const Admin = () => {
           </TabsList>
 
           <TabsContent value="riksdagen" className="space-y-4">
+            <RiksdagenApiInfo />
+            <RiksdagenDataFetchConfig />
             <SyncProgress source="riksdagen" />
             <Card>
               <CardHeader>

@@ -92,11 +92,14 @@ Deno.serve(async (req) => {
     const { data: { user }, error: authError } = await supabaseClient.auth.getUser(token);
 
     if (authError || !user) {
+      console.error('Auth verification failed:', authError?.message, 'User:', user?.id);
       return new Response(
         JSON.stringify({ error: 'Invalid authentication' }),
         { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     }
+
+    console.log('User authenticated:', user.id, user.email);
 
     // Check if user has admin role (using service role to bypass RLS)
     const { data: adminRole, error: roleError } = await supabaseClient
@@ -106,8 +109,10 @@ Deno.serve(async (req) => {
       .eq('role', 'admin')
       .maybeSingle();
 
+    console.log('Admin check result:', { adminRole, roleError, userId: user.id });
+
     if (roleError || !adminRole) {
-      console.error('Admin check failed:', roleError);
+      console.error('Admin check failed:', roleError?.message, 'Role found:', adminRole);
       return new Response(
         JSON.stringify({ error: 'Admin access required' }),
         { status: 403, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }

@@ -67,7 +67,7 @@ Deno.serve(async (req) => {
       Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
     )
 
-    const { dataType, limit = 50, filters = {} } = await req.json();
+    const { dataType, limit = 10000, filters = {} } = await req.json();
 
     console.log(`Hämtar ${dataType} data från Riksdagens API...`);
 

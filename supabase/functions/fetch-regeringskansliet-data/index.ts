@@ -29,7 +29,7 @@ Deno.serve(async (req) => {
       Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
     )
 
-    const { dataType, limit = 50 } = await req.json();
+    const { dataType, limit = 0 } = await req.json();
 
     console.log(`Hämtar ${dataType} data från g0v.se API...`);
 
@@ -72,7 +72,7 @@ Deno.serve(async (req) => {
     let errors = 0;
 
     if (dataType === 'pressmeddelanden' && Array.isArray(data)) {
-      const items = limit ? data.slice(0, limit) : data;
+      const items = limit > 0 ? data.slice(0, limit) : data;
       
       for (const item of items) {
         try {
@@ -101,7 +101,7 @@ Deno.serve(async (req) => {
         }
       }
     } else if (dataType === 'propositioner' && Array.isArray(data)) {
-      const items = limit ? data.slice(0, limit) : data;
+      const items = limit > 0 ? data.slice(0, limit) : data;
       
       for (const item of items) {
         try {
@@ -155,7 +155,7 @@ Deno.serve(async (req) => {
         }
       }
     } else if (dataType === 'dokument' && Array.isArray(data)) {
-      const items = limit ? data.slice(0, limit) : data;
+      const items = limit > 0 ? data.slice(0, limit) : data;
       
       for (const item of items) {
         try {

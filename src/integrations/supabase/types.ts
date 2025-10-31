@@ -14,6 +14,189 @@ export type Database = {
   }
   public: {
     Tables: {
+      regeringskansliet_api_log: {
+        Row: {
+          antal_poster: number | null
+          created_at: string
+          endpoint: string
+          felmeddelande: string | null
+          id: string
+          status: string
+        }
+        Insert: {
+          antal_poster?: number | null
+          created_at?: string
+          endpoint: string
+          felmeddelande?: string | null
+          id?: string
+          status: string
+        }
+        Update: {
+          antal_poster?: number | null
+          created_at?: string
+          endpoint?: string
+          felmeddelande?: string | null
+          id?: string
+          status?: string
+        }
+        Relationships: []
+      }
+      regeringskansliet_dokument: {
+        Row: {
+          avsandare: string | null
+          beteckningsnummer: string | null
+          bilagor: Json | null
+          created_at: string
+          document_id: string
+          id: string
+          innehall: string | null
+          kategorier: string[] | null
+          markdown_url: string | null
+          publicerad_datum: string | null
+          titel: string | null
+          typ: string | null
+          updated_at: string
+          uppdaterad_datum: string | null
+          url: string | null
+        }
+        Insert: {
+          avsandare?: string | null
+          beteckningsnummer?: string | null
+          bilagor?: Json | null
+          created_at?: string
+          document_id: string
+          id?: string
+          innehall?: string | null
+          kategorier?: string[] | null
+          markdown_url?: string | null
+          publicerad_datum?: string | null
+          titel?: string | null
+          typ?: string | null
+          updated_at?: string
+          uppdaterad_datum?: string | null
+          url?: string | null
+        }
+        Update: {
+          avsandare?: string | null
+          beteckningsnummer?: string | null
+          bilagor?: Json | null
+          created_at?: string
+          document_id?: string
+          id?: string
+          innehall?: string | null
+          kategorier?: string[] | null
+          markdown_url?: string | null
+          publicerad_datum?: string | null
+          titel?: string | null
+          typ?: string | null
+          updated_at?: string
+          uppdaterad_datum?: string | null
+          url?: string | null
+        }
+        Relationships: []
+      }
+      regeringskansliet_kategorier: {
+        Row: {
+          beskrivning: string | null
+          created_at: string
+          id: string
+          kod: string
+          namn: string | null
+          updated_at: string
+        }
+        Insert: {
+          beskrivning?: string | null
+          created_at?: string
+          id?: string
+          kod: string
+          namn?: string | null
+          updated_at?: string
+        }
+        Update: {
+          beskrivning?: string | null
+          created_at?: string
+          id?: string
+          kod?: string
+          namn?: string | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      regeringskansliet_pressmeddelanden: {
+        Row: {
+          created_at: string
+          departement: string | null
+          document_id: string
+          id: string
+          innehall: string | null
+          publicerad_datum: string | null
+          titel: string | null
+          updated_at: string
+          url: string | null
+        }
+        Insert: {
+          created_at?: string
+          departement?: string | null
+          document_id: string
+          id?: string
+          innehall?: string | null
+          publicerad_datum?: string | null
+          titel?: string | null
+          updated_at?: string
+          url?: string | null
+        }
+        Update: {
+          created_at?: string
+          departement?: string | null
+          document_id?: string
+          id?: string
+          innehall?: string | null
+          publicerad_datum?: string | null
+          titel?: string | null
+          updated_at?: string
+          url?: string | null
+        }
+        Relationships: []
+      }
+      regeringskansliet_propositioner: {
+        Row: {
+          beteckningsnummer: string | null
+          created_at: string
+          departement: string | null
+          document_id: string
+          id: string
+          pdf_url: string | null
+          publicerad_datum: string | null
+          titel: string | null
+          updated_at: string
+          url: string | null
+        }
+        Insert: {
+          beteckningsnummer?: string | null
+          created_at?: string
+          departement?: string | null
+          document_id: string
+          id?: string
+          pdf_url?: string | null
+          publicerad_datum?: string | null
+          titel?: string | null
+          updated_at?: string
+          url?: string | null
+        }
+        Update: {
+          beteckningsnummer?: string | null
+          created_at?: string
+          departement?: string | null
+          document_id?: string
+          id?: string
+          pdf_url?: string | null
+          publicerad_datum?: string | null
+          titel?: string | null
+          updated_at?: string
+          url?: string | null
+        }
+        Relationships: []
+      }
       riksdagen_anforanden: {
         Row: {
           anfdatum: string | null

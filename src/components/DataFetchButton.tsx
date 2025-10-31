@@ -10,14 +10,20 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 
-const DataFetchButton = () => {
+interface DataFetchButtonProps {
+  type?: 'riksdagen' | 'regeringskansliet';
+}
+
+const DataFetchButton = ({ type = 'riksdagen' }: DataFetchButtonProps) => {
   const [isLoading, setIsLoading] = useState(false);
   const { toast } = useToast();
 
   const fetchData = async (dataType: string, limit: number = 50) => {
     setIsLoading(true);
+    const functionName = type === 'riksdagen' ? 'fetch-riksdagen-data' : 'fetch-regeringskansliet-data';
+    
     try {
-      const { data, error } = await supabase.functions.invoke('fetch-riksdagen-data', {
+      const { data, error } = await supabase.functions.invoke(functionName, {
         body: { dataType, limit }
       });
 
@@ -55,18 +61,37 @@ const DataFetchButton = () => {
         </Button>
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end">
-        <DropdownMenuItem onClick={() => fetchData('dokument', 100)}>
-          Hämta dokument
-        </DropdownMenuItem>
-        <DropdownMenuItem onClick={() => fetchData('ledamoter', 500)}>
-          Hämta ledamöter
-        </DropdownMenuItem>
-        <DropdownMenuItem onClick={() => fetchData('anforanden', 100)}>
-          Hämta anföranden
-        </DropdownMenuItem>
-        <DropdownMenuItem onClick={() => fetchData('voteringar', 100)}>
-          Hämta voteringar
-        </DropdownMenuItem>
+        {type === 'riksdagen' ? (
+          <>
+            <DropdownMenuItem onClick={() => fetchData('dokument', 100)}>
+              Hämta dokument
+            </DropdownMenuItem>
+            <DropdownMenuItem onClick={() => fetchData('ledamoter', 500)}>
+              Hämta ledamöter
+            </DropdownMenuItem>
+            <DropdownMenuItem onClick={() => fetchData('anforanden', 100)}>
+              Hämta anföranden
+            </DropdownMenuItem>
+            <DropdownMenuItem onClick={() => fetchData('voteringar', 100)}>
+              Hämta voteringar
+            </DropdownMenuItem>
+          </>
+        ) : (
+          <>
+            <DropdownMenuItem onClick={() => fetchData('pressmeddelanden', 100)}>
+              Hämta pressmeddelanden
+            </DropdownMenuItem>
+            <DropdownMenuItem onClick={() => fetchData('propositioner', 100)}>
+              Hämta propositioner
+            </DropdownMenuItem>
+            <DropdownMenuItem onClick={() => fetchData('dokument', 100)}>
+              Hämta dokument
+            </DropdownMenuItem>
+            <DropdownMenuItem onClick={() => fetchData('kategorier', 500)}>
+              Hämta kategorier
+            </DropdownMenuItem>
+          </>
+        )}
       </DropdownMenuContent>
     </DropdownMenu>
   );

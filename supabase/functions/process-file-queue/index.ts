@@ -114,9 +114,24 @@ Deno.serve(async (req) => {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     });
   } catch (error: any) {
-    return new Response(JSON.stringify({ error: error.message }), {
-      status: 500,
-      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+    // Log detailed error for debugging
+    console.error('Edge function error:', {
+      error: error?.message || String(error),
+      stack: error?.stack,
+      timestamp: new Date().toISOString()
     });
+    
+    // Return generic error to client
+    const requestId = crypto.randomUUID();
+    return new Response(
+      JSON.stringify({ 
+        error: 'An error occurred processing your request',
+        requestId: requestId
+      }), 
+      {
+        status: 500,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      }
+    );
   }
 });

@@ -201,23 +201,66 @@ Deno.serve(async (req) => {
 
     const paginate = requestBody.paginate ?? true;
     const maxPages = requestBody.maxPages ?? null;
+    
+    // Filtreringsparametrar från Riksdagens API
+    const filters = {
+      rm: requestBody.rm || '',              // Riksmöte (t.ex. "2024/25")
+      parti: requestBody.parti || '',         // Parti (t.ex. "S", "M", "SD")
+      iid: requestBody.iid || '',             // Intressent ID (ledamots-ID)
+      from: requestBody.from || '',           // Från datum
+      tom: requestBody.tom || '',             // Till datum
+      ts: requestBody.ts || '',               // Tidsperiod
+      doktyp: requestBody.doktyp || '',       // Dokumenttyp
+      sz: requestBody.sz || '200',            // Antal resultat per sida (default 200)
+    };
 
     console.log(`Hämtar ${dataType} data från Riksdagens API (paginering: ${paginate}, original: ${rawDataType})...`);
+    console.log(`Filtreringsparametrar:`, filters);
 
     let apiUrl = '';
     let tableName = '';
 
+    // Bygg API URL med filtreringsparametrar
+    const buildApiUrl = (baseUrl: string, format: string = 'json') => {
+      const params = new URLSearchParams({
+        utformat: format,
+        sz: filters.sz,
+        p: '1'
+      });
+      
+      // Lägg till filtreringsparametrar om de finns
+      if (filters.rm) params.append('rm', filters.rm);
+      if (filters.parti) params.append('parti', filters.parti);
+      if (filters.iid) params.append('iid', filters.iid);
+      if (filters.from) params.append('from', filters.from);
+      if (filters.tom) params.append('tom', filters.tom);
+      if (filters.ts) params.append('ts', filters.ts);
+      if (filters.doktyp) params.append('doktyp', filters.doktyp);
+      
+      return `${baseUrl}?${params.toString()}`;
+    };
+
     if (dataType === 'dokument') {
-      apiUrl = `https://data.riksdagen.se/dokumentlista/?sok=&doktyp=&rm=&ts=&bet=&tempbet=&nr=&org=&iid=&webbtv=&talare=&exakt=&planering=&facets=&sort=datum&sortorder=desc&rapport=&utformat=json&a=s&p=1&sz=200`;
+      apiUrl = buildApiUrl('https://data.riksdagen.se/dokumentlista', 'json');
+      // Lägg till dokumentspecifika parametrar
+      const url = new URL(apiUrl);
+      url.searchParams.append('sort', 'datum');
+      url.searchParams.append('sortorder', 'desc');
+      apiUrl = url.toString();
       tableName = 'riksdagen_dokument';
     } else if (dataType === 'ledamoter') {
-      apiUrl = `https://data.riksdagen.se/personlista/?utformat=json&rdlstatus=samtliga`;
+      apiUrl = 'https://data.riksdagen.se/personlista/?utformat=json&rdlstatus=samtliga';
       tableName = 'riksdagen_ledamoter';
     } else if (dataType === 'anforanden') {
-      apiUrl = `https://data.riksdagen.se/anforandelista/?utformat=xml&sz=200&p=1`;
+      // Anföranden använder XML-format
+      apiUrl = buildApiUrl('https://data.riksdagen.se/anforandelista', 'xml');
       tableName = 'riksdagen_anforanden';
     } else if (dataType === 'voteringar') {
-      apiUrl = `https://data.riksdagen.se/voteringlista/?utformat=json&sz=200&sort=datum&sortorder=desc&p=1`;
+      apiUrl = buildApiUrl('https://data.riksdagen.se/voteringlista', 'json');
+      const url = new URL(apiUrl);
+      url.searchParams.append('sort', 'datum');
+      url.searchParams.append('sortorder', 'desc');
+      apiUrl = url.toString();
       tableName = 'riksdagen_voteringar';
     } else {
       return new Response(
@@ -225,6 +268,8 @@ Deno.serve(async (req) => {
         { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 400 }
       );
     }
+    
+    console.log(`API URL: ${apiUrl}`);
 
     let totalInserted = 0;
     let totalErrors = 0;

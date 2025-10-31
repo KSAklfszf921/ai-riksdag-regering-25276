@@ -1,5 +1,6 @@
 import { InstitutionCard } from "@/components/InstitutionCard";
-import { Building2, Users } from "lucide-react";
+import riksdagenSymbol from "@/assets/riksdagen-symbol.png";
+import regeringskanslientSymbol from "@/assets/regeringskansliet-symbol.png";
 
 const Index = () => {
   return (
@@ -19,14 +20,14 @@ const Index = () => {
             title="Riksdagen"
             description="Utforska Sveriges riksdag med AI. Få insikter om propositioner, debatter och beslutsprocesser."
             href="https://riksdagen.ai"
-            icon={<Users className="w-12 h-12" />}
+            image={riksdagenSymbol}
           />
           
           <InstitutionCard
             title="Regeringskansliet"
             description="Upptäck regeringens arbete och organisation. AI-driven information om departement och policy."
             href="https://regeringskansliet.ai"
-            icon={<Building2 className="w-12 h-12" />}
+            image={regeringskanslientSymbol}
           />
         </div>
 

@@ -16,10 +16,16 @@ async function enqueueFileDownload(
   columnName: string
 ) {
   try {
+    // Fixa relativa URLs från regeringen.se
+    let fullUrl = fileUrl;
+    if (fileUrl.startsWith('/')) {
+      fullUrl = `https://www.regeringen.se${fileUrl}`;
+    }
+    
     await supabaseClient
       .from('file_download_queue')
       .insert({
-        file_url: fileUrl,
+        file_url: fullUrl,
         bucket,
         storage_path: path,
         table_name: tableName,
@@ -178,11 +184,17 @@ Deno.serve(async (req) => {
 
           if (insertedPress && item.attachments && Array.isArray(item.attachments)) {
             for (const attachment of item.attachments) {
-              const fileName = attachment.url.split('/').pop() || `bilaga_${Date.now()}.pdf`;
+              // Fixa relativa URLs
+              let attachmentUrl = attachment.url;
+              if (attachmentUrl.startsWith('/')) {
+                attachmentUrl = `https://www.regeringen.se${attachmentUrl}`;
+              }
+              
+              const fileName = attachmentUrl.split('/').pop() || `bilaga_${Date.now()}.pdf`;
               const filePath = `pressmeddelanden/${item.id || Date.now()}/${fileName}`;
               await enqueueFileDownload(
                 supabaseClient,
-                attachment.url,
+                attachmentUrl,
                 'regeringskansliet-files',
                 filePath,
                 tableName,
@@ -239,11 +251,17 @@ Deno.serve(async (req) => {
             .single();
 
           if (insertedProp && propData.pdf_url) {
+            // Fixa relativa URLs
+            let pdfUrl = propData.pdf_url;
+            if (pdfUrl.startsWith('/')) {
+              pdfUrl = `https://www.regeringen.se${pdfUrl}`;
+            }
+            
             const fileName = `${item.identifier || item.id || Date.now()}.pdf`;
             const filePath = `propositioner/${fileName}`;
             await enqueueFileDownload(
               supabaseClient,
-              propData.pdf_url,
+              pdfUrl,
               'regeringskansliet-files',
               filePath,
               tableName,
@@ -343,11 +361,17 @@ Deno.serve(async (req) => {
 
           if (insertedDoc && item.attachments && Array.isArray(item.attachments)) {
             for (const attachment of item.attachments) {
-              const fileName = attachment.url.split('/').pop() || `file_${Date.now()}`;
+              // Fixa relativa URLs
+              let attachmentUrl = attachment.url;
+              if (attachmentUrl.startsWith('/')) {
+                attachmentUrl = `https://www.regeringen.se${attachmentUrl}`;
+              }
+              
+              const fileName = attachmentUrl.split('/').pop() || `file_${Date.now()}`;
               const filePath = `${dataType}/${item.id || Date.now()}/${fileName}`;
               await enqueueFileDownload(
                 supabaseClient,
-                attachment.url,
+                attachmentUrl,
                 'regeringskansliet-files',
                 filePath,
                 tableName,

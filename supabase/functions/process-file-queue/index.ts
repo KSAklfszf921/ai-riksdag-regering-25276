@@ -5,54 +5,14 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
 
-async function downloadAndStoreFile(supabaseClient: any, fileUrl: string, bucket: string, path: string) {
-  try {
-    // Helper function to fetch with retries
-    const fetchWithRetry = async (url: string, maxRetries = 3): Promise<Response> => {
-      for (let attempt = 1; attempt <= maxRetries; attempt++) {
-        try {
-          const response = await fetch(url, {
-            headers: {
-              'User-Agent': 'Mozilla/5.0 (compatible; SvensktPolitikArkiv/1.0)',
-              'Accept': '*/*',
-            },
-            signal: AbortSignal.timeout(30000), // 30 second timeout
-          });
-          
-          if (!response.ok) {
-            throw new Error(`HTTP ${response.status}: ${response.statusText}`);
-          }
-          
-          return response;
-        } catch (error) {
-          const isLastAttempt = attempt === maxRetries;
-          const waitTime = Math.min(1000 * Math.pow(2, attempt - 1), 10000); // Exponential backoff
-          const errorMessage = error instanceof Error ? error.message : String(error);
-          
-          if (isLastAttempt) {
-            throw new Error(`Download failed after ${maxRetries} attempts: ${errorMessage}`);
-          }
-          
-          await new Promise(resolve => setTimeout(resolve, waitTime));
-        }
-      }
-      throw new Error('Unexpected error in fetchWithRetry');
-    };
+function sanitizeStoragePath(path: string): string {
+  return path.replace(/[^a-zA-Z0-9-_./]/g, '_');
+}
 
-    const response = await fetchWithRetry(fileUrl);
-    const arrayBuffer = await response.arrayBuffer();
-    const { data, error } = await supabaseClient.storage
-      .from(bucket)
-      .upload(path, arrayBuffer, { contentType: response.headers.get('content-type'), upsert: true });
-
-    if (error) throw error;
-
-    const { data: { publicUrl } } = supabaseClient.storage.from(bucket).getPublicUrl(path);
-    return publicUrl;
-  } catch (error) {
-    console.error('Download error:', error);
-    return null;
-  }
+function generateConsistentPath(dataType: string, documentId: string, filename: string): string {
+  const year = new Date().getFullYear();
+  const sanitizedFilename = sanitizeStoragePath(filename);
+  return `${dataType}/${year}/${documentId}/${sanitizedFilename}`;
 }
 
 Deno.serve(async (req) => {
@@ -61,7 +21,6 @@ Deno.serve(async (req) => {
   }
 
   try {
-    // Verify authentication
     const authHeader = req.headers.get('Authorization');
     if (!authHeader) {
       return new Response(
@@ -75,32 +34,24 @@ Deno.serve(async (req) => {
       Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
     );
 
-    // Verify the user is authenticated and is an admin
     const token = authHeader.replace('Bearer ', '');
     const { data: { user }, error: authError } = await supabaseClient.auth.getUser(token);
 
     if (authError || !user) {
-      console.error('Auth verification failed:', authError?.message, 'User:', user?.id);
       return new Response(
         JSON.stringify({ error: 'Invalid authentication' }),
         { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     }
 
-    console.log('User authenticated:', user.id, user.email);
-
-    // Check if user has admin role (using service role to bypass RLS)
-    const { data: adminRole, error: roleError } = await supabaseClient
+    const { data: adminRole } = await supabaseClient
       .from('user_roles')
       .select('role')
       .eq('user_id', user.id)
       .eq('role', 'admin')
       .maybeSingle();
 
-    console.log('Admin check result:', { adminRole, roleError, userId: user.id });
-
-    if (roleError || !adminRole) {
-      console.error('Admin check failed:', roleError?.message, 'Role found:', adminRole);
+    if (!adminRole) {
       return new Response(
         JSON.stringify({ error: 'Admin access required' }),
         { status: 403, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
@@ -122,33 +73,87 @@ Deno.serve(async (req) => {
         .update({ status: 'processing', started_at: new Date().toISOString() })
         .eq('id', item.id);
 
-      const localUrl = await downloadAndStoreFile(supabaseClient, item.file_url, item.bucket, item.storage_path);
+      try {
+        const headResponse = await fetch(item.file_url, { method: 'HEAD' });
+        if (!headResponse.ok) {
+          throw new Error(`URL returned HTTP ${headResponse.status}`);
+        }
 
-      if (localUrl) {
+        const contentLength = headResponse.headers.get('content-length');
+        const contentType = headResponse.headers.get('content-type') || 'application/pdf';
+
+        const response = await fetch(item.file_url);
+        if (!response.ok) throw new Error(`Failed to download: ${response.statusText}`);
+
+        const blob = await response.blob();
+        const arrayBuffer = await blob.arrayBuffer();
+        const sizeBytes = arrayBuffer.byteLength;
+
+        const filename = item.storage_path.split('/').pop() || 'file';
+        const consistentPath = generateConsistentPath(
+          item.table_name.replace('regeringskansliet_', ''),
+          item.record_id,
+          filename
+        );
+
+        const { error: uploadError } = await supabaseClient.storage
+          .from(item.bucket)
+          .upload(consistentPath, arrayBuffer, { contentType, upsert: true });
+
+        if (uploadError) throw uploadError;
+
+        const { data: { publicUrl } } = supabaseClient.storage
+          .from(item.bucket)
+          .getPublicUrl(consistentPath);
+
+        const fileMetadata = {
+          name: filename,
+          url: publicUrl,
+          original_url: item.file_url,
+          size_bytes: sizeBytes,
+          mime_type: contentType,
+          uploaded_at: new Date().toISOString()
+        };
+
+        const { data: existingDoc } = await supabaseClient
+          .from(item.table_name)
+          .select(item.column_name)
+          .eq('id', item.record_id)
+          .single();
+
+        let updatedFiles = [fileMetadata];
+        if (existingDoc?.[item.column_name] && Array.isArray(existingDoc[item.column_name])) {
+          const existing = existingDoc[item.column_name];
+          const fileExists = existing.some((f: any) => f.name === filename);
+          updatedFiles = fileExists 
+            ? existing.map((f: any) => f.name === filename ? fileMetadata : f)
+            : [...existing, fileMetadata];
+        }
+
         await supabaseClient
           .from(item.table_name)
-          .update({ [item.column_name]: localUrl })
+          .update({ [item.column_name]: updatedFiles })
           .eq('id', item.record_id);
 
         await supabaseClient
           .from('file_download_queue')
           .update({ status: 'completed', completed_at: new Date().toISOString() })
           .eq('id', item.id);
-        
+
         processed++;
-      } else {
+      } catch (error: any) {
         const newAttempts = item.attempts + 1;
         const newStatus = newAttempts >= item.max_attempts ? 'failed' : 'pending';
-        
+
         await supabaseClient
           .from('file_download_queue')
-          .update({ 
-            status: newStatus, 
+          .update({
+            status: newStatus,
             attempts: newAttempts,
-            error_message: 'Failed to download file'
+            error_message: error.message
           })
           .eq('id', item.id);
-        
+
         failed++;
       }
     }
@@ -157,24 +162,10 @@ Deno.serve(async (req) => {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     });
   } catch (error: any) {
-    // Log detailed error for debugging
-    console.error('Edge function error:', {
-      error: error?.message || String(error),
-      stack: error?.stack,
-      timestamp: new Date().toISOString()
-    });
-    
-    // Return generic error to client
-    const requestId = crypto.randomUUID();
+    console.error('Edge function error:', error);
     return new Response(
-      JSON.stringify({ 
-        error: 'An error occurred processing your request',
-        requestId: requestId
-      }), 
-      {
-        status: 500,
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-      }
+      JSON.stringify({ error: 'An error occurred', requestId: crypto.randomUUID() }),
+      { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     );
   }
 });

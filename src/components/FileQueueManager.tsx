@@ -1,16 +1,21 @@
+import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
 import { Badge } from "@/components/ui/badge";
-import { Download, RefreshCw, AlertCircle, CheckCircle2, Clock } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
-import { useState } from "react";
+import { useAutoRetry } from "@/hooks/useAutoRetry";
+import { Loader2, Clock, CheckCircle2, AlertCircle, Play } from "lucide-react";
+import { Switch } from "@/components/ui/switch";
+import { Label } from "@/components/ui/label";
 
 const FileQueueManager = () => {
-  const { toast } = useToast();
   const [isProcessing, setIsProcessing] = useState(false);
+  const [autoProcess, setAutoProcess] = useState(false);
+  const { toast } = useToast();
+  useAutoRetry(autoProcess);
 
   const { data: queueStats, refetch } = useQuery({
     queryKey: ["file-queue-stats"],
@@ -101,37 +106,26 @@ const FileQueueManager = () => {
   const progress = queueStats.total > 0 ? (queueStats.completed / queueStats.total) * 100 : 0;
 
   return (
-    <Card className="mb-6">
+    <Card>
       <CardHeader>
-        <div className="flex items-center justify-between">
-          <div>
-            <CardTitle className="flex items-center gap-2">
-              <Download className="h-5 w-5" />
-              Filnedladdningskö
-            </CardTitle>
-            <CardDescription>
-              Hanterar nedladdning av filer i bakgrunden
-            </CardDescription>
-          </div>
-          <div className="flex gap-2">
-            {queueStats.failed > 0 && (
-              <Button variant="outline" size="sm" onClick={resetFailed}>
-                <RefreshCw className="h-4 w-4 mr-2" />
-                Återställ misslyckade
-              </Button>
-            )}
-            <Button 
-              size="sm" 
-              onClick={processQueue}
-              disabled={isProcessing || queueStats.pending === 0}
-            >
-              <Download className="h-4 w-4 mr-2" />
-              {isProcessing ? "Processar..." : "Starta nedladdning"}
-            </Button>
-          </div>
-        </div>
+        <CardTitle className="flex items-center justify-between">
+          <span>Filnedladdningskö</span>
+          {queueStats && queueStats.processing > 0 && (
+            <Badge variant="secondary" className="animate-pulse">Live</Badge>
+          )}
+        </CardTitle>
       </CardHeader>
       <CardContent className="space-y-4">
+        <div className="flex items-center gap-4 p-3 border rounded-lg bg-muted/50">
+          <Switch id="auto" checked={autoProcess} onCheckedChange={setAutoProcess} />
+          <Label htmlFor="auto">Auto-process (var 5:e minut)</Label>
+        </div>
+        <div className="flex gap-2">
+          <Button onClick={processQueue} disabled={isProcessing || !queueStats?.pending} className="flex-1">
+            {isProcessing ? <><Loader2 className="mr-2 h-4 w-4 animate-spin" />Bearbetar...</> : <><Play className="mr-2 h-4 w-4" />Kör nu</>}
+          </Button>
+          {queueStats?.failed > 0 && <Button variant="outline" onClick={resetFailed}>Återställ ({queueStats.failed})</Button>}
+        </div>
         <div>
           <div className="flex justify-between text-sm mb-2">
             <span>Totalt framsteg</span>

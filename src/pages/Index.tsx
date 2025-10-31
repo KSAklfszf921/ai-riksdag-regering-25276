@@ -13,7 +13,7 @@ const Index = () => {
   const { isAdmin } = useIsAdmin();
   const { toast } = useToast();
 
-  const { data: user } = useQuery({
+  const { data: user, isLoading: userLoading } = useQuery({
     queryKey: ["current-user"],
     queryFn: async () => {
       const { data } = await supabase.auth.getUser();
@@ -36,24 +36,32 @@ const Index = () => {
 
       <div className="container mx-auto px-4 py-12 md:py-20 max-w-6xl">
         <div className="flex justify-end gap-2 mb-4">
-          {isAdmin && (
+          {/* Admin button - show for logged in users */}
+          {user && (
             <Link to="/admin">
-              <Button variant="outline" size="sm">
+              <Button variant={isAdmin ? "default" : "outline"} size="sm">
                 <Shield className="h-4 w-4 mr-2" />
-                Admin Panel
+                {isAdmin ? "Admin Panel" : "Admin Setup"}
               </Button>
             </Link>
           )}
+          
+          {/* Auth buttons */}
           {user ? (
-            <Button variant="outline" size="sm" onClick={handleLogout}>
-              <LogOut className="h-4 w-4 mr-2" />
-              Logga ut
-            </Button>
+            <div className="flex items-center gap-2">
+              <span className="text-sm text-muted-foreground hidden sm:inline">
+                {user.email}
+              </span>
+              <Button variant="outline" size="sm" onClick={handleLogout}>
+                <LogOut className="h-4 w-4 mr-2" />
+                Logga ut
+              </Button>
+            </div>
           ) : (
             <Link to="/login">
-              <Button variant="outline" size="sm">
+              <Button size="sm">
                 <LogIn className="h-4 w-4 mr-2" />
-                Logga in
+                Logga in för Admin
               </Button>
             </Link>
           )}

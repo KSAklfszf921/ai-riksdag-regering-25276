@@ -16,8 +16,7 @@ const Dokument = () => {
       const { data, error } = await supabase
         .from('riksdagen_dokument')
         .select('*')
-        .order('datum', { ascending: false })
-        .limit(50);
+        .order('datum', { ascending: false });
       
       if (error) throw error;
       return data;
@@ -97,6 +96,16 @@ const Dokument = () => {
                       </div>
                     </div>
                     <div className="flex flex-col gap-2">
+                      {dok.local_pdf_url && (
+                        <a
+                          href={dok.local_pdf_url}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="flex items-center gap-1 text-sm text-primary hover:underline font-medium"
+                        >
+                          PDF (Lokal) <ExternalLink className="h-3 w-3" />
+                        </a>
+                      )}
                       {dok.dokument_url_html && (
                         <a
                           href={dok.dokument_url_html}

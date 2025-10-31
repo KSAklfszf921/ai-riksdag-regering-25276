@@ -20,8 +20,7 @@ const RegeringskanslientPropositioner = () => {
       const { data, error } = await supabase
         .from('regeringskansliet_propositioner')
         .select('*')
-        .order('publicerad_datum', { ascending: false })
-        .limit(100);
+        .order('publicerad_datum', { ascending: false });
       
       if (error) throw error;
       return data;
@@ -111,6 +110,16 @@ const RegeringskanslientPropositioner = () => {
                       </div>
                     </div>
                     <div className="flex flex-col gap-2">
+                      {prop.local_pdf_url && (
+                        <a
+                          href={prop.local_pdf_url}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="flex items-center gap-1 text-sm text-primary hover:underline font-medium"
+                        >
+                          PDF (Lokal) <Download className="h-3 w-3" />
+                        </a>
+                      )}
                       {prop.url && (
                         <a
                           href={prop.url}
@@ -121,7 +130,7 @@ const RegeringskanslientPropositioner = () => {
                           Läs mer <ExternalLink className="h-3 w-3" />
                         </a>
                       )}
-                      {prop.pdf_url && (
+                      {prop.pdf_url && !prop.local_pdf_url && (
                         <a
                           href={prop.pdf_url}
                           target="_blank"

@@ -147,8 +147,16 @@ Deno.serve(async (req) => {
       );
     }
 
-    const { data: isAdmin, error: roleError } = await supabaseClient.rpc('is_admin');
-    if (roleError || !isAdmin) {
+    // Check if user has admin role (using service role to bypass RLS)
+    const { data: adminRole, error: roleError } = await supabaseClient
+      .from('user_roles')
+      .select('role')
+      .eq('user_id', user.id)
+      .eq('role', 'admin')
+      .maybeSingle();
+
+    if (roleError || !adminRole) {
+      console.error('Admin check failed:', roleError);
       return new Response(
         JSON.stringify({ error: 'Admin access required' }),
         { status: 403, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }

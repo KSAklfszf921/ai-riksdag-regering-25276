@@ -14,7 +14,138 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      riksdagen_api_log: {
+        Row: {
+          antal_poster: number | null
+          created_at: string
+          endpoint: string
+          felmeddelande: string | null
+          id: string
+          status: string
+        }
+        Insert: {
+          antal_poster?: number | null
+          created_at?: string
+          endpoint: string
+          felmeddelande?: string | null
+          id?: string
+          status: string
+        }
+        Update: {
+          antal_poster?: number | null
+          created_at?: string
+          endpoint?: string
+          felmeddelande?: string | null
+          id?: string
+          status?: string
+        }
+        Relationships: []
+      }
+      riksdagen_dokument: {
+        Row: {
+          beteckning: string | null
+          created_at: string
+          datum: string | null
+          dok_id: string
+          doktyp: string | null
+          dokument_url_html: string | null
+          dokument_url_text: string | null
+          id: string
+          nummer: string | null
+          organ: string | null
+          rm: string | null
+          status: string | null
+          subtitel: string | null
+          subtyp: string | null
+          systemdatum: string | null
+          titel: string | null
+          typ: string | null
+          updated_at: string
+        }
+        Insert: {
+          beteckning?: string | null
+          created_at?: string
+          datum?: string | null
+          dok_id: string
+          doktyp?: string | null
+          dokument_url_html?: string | null
+          dokument_url_text?: string | null
+          id?: string
+          nummer?: string | null
+          organ?: string | null
+          rm?: string | null
+          status?: string | null
+          subtitel?: string | null
+          subtyp?: string | null
+          systemdatum?: string | null
+          titel?: string | null
+          typ?: string | null
+          updated_at?: string
+        }
+        Update: {
+          beteckning?: string | null
+          created_at?: string
+          datum?: string | null
+          dok_id?: string
+          doktyp?: string | null
+          dokument_url_html?: string | null
+          dokument_url_text?: string | null
+          id?: string
+          nummer?: string | null
+          organ?: string | null
+          rm?: string | null
+          status?: string | null
+          subtitel?: string | null
+          subtyp?: string | null
+          systemdatum?: string | null
+          titel?: string | null
+          typ?: string | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      riksdagen_ledamoter: {
+        Row: {
+          bild_url: string | null
+          created_at: string
+          efternamn: string | null
+          fornamn: string | null
+          id: string
+          intressent_id: string
+          parti: string | null
+          status: string | null
+          tilltalsnamn: string | null
+          updated_at: string
+          valkrets: string | null
+        }
+        Insert: {
+          bild_url?: string | null
+          created_at?: string
+          efternamn?: string | null
+          fornamn?: string | null
+          id?: string
+          intressent_id: string
+          parti?: string | null
+          status?: string | null
+          tilltalsnamn?: string | null
+          updated_at?: string
+          valkrets?: string | null
+        }
+        Update: {
+          bild_url?: string | null
+          created_at?: string
+          efternamn?: string | null
+          fornamn?: string | null
+          id?: string
+          intressent_id?: string
+          parti?: string | null
+          status?: string | null
+          tilltalsnamn?: string | null
+          updated_at?: string
+          valkrets?: string | null
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never

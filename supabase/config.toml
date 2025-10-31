@@ -1,1 +1,4 @@
 project_id = "kufkpsoygixjaotmadvw"
+
+[functions.fetch-riksdagen-data]
+verify_jwt = false

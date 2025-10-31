@@ -1,5 +1,5 @@
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.78.0'
-import { DOMParser } from 'https://deno.land/x/deno_dom@v0.1.38/deno-dom-wasm.ts'
+import { XMLParser } from 'npm:fast-xml-parser@4.3.2'
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -214,7 +214,7 @@ Deno.serve(async (req) => {
       apiUrl = `https://data.riksdagen.se/personlista/?utformat=json&rdlstatus=samtliga`;
       tableName = 'riksdagen_ledamoter';
     } else if (dataType === 'anforanden') {
-      apiUrl = `https://data.riksdagen.se/anforande/?utformat=json&sz=200&sort=c_datum&sortorder=desc&p=1`;
+      apiUrl = `https://data.riksdagen.se/anforandelista/?utformat=xml&sz=200&p=1`;
       tableName = 'riksdagen_anforanden';
     } else if (dataType === 'voteringar') {
       apiUrl = `https://data.riksdagen.se/voteringlista/?utformat=json&sz=200&sort=datum&sortorder=desc&p=1`;
@@ -298,55 +298,46 @@ Deno.serve(async (req) => {
       
       const response: Response = await fetchWithRetry(nextPageUrl);
 
-      // Anföranden - parse XML med deno-dom
+      // Anföranden - parse XML with fast-xml-parser
       let data: any;
       if (dataType === 'anforanden') {
         const xmlText = await response.text();
-        console.log('Anföranden-data mottagen (XML format), parsar...');
+        console.log('Anföranden-data mottagen (XML format)');
+        console.log(`Raw XML preview (first 500 chars): ${xmlText.substring(0, 500)}`);
         
         try {
-          const doc = new DOMParser().parseFromString(xmlText, 'text/xml');
-          if (!doc) throw new Error('Kunde inte parsa XML');
+          const parser = new XMLParser({
+            ignoreAttributes: false,
+            attributeNamePrefix: '@'
+          });
           
-          const anfElements = doc.querySelectorAll('anforande');
-          const anforanden = [];
+          const parsed = parser.parse(xmlText);
+          console.log('XML parsed successfully');
           
-          for (const anf of anfElements) {
-            const element = anf as any; // Cast to access querySelector
-            anforanden.push({
-              anforande_id: element.querySelector('anforande_id')?.textContent || '',
-              intressent_id: element.querySelector('intressent_id')?.textContent,
-              dokument_id: element.querySelector('dokument_id')?.textContent,
-              dok_id: element.querySelector('dok_id')?.textContent,
-              debatt: element.querySelector('debatt')?.textContent,
-              anforandenummer: element.querySelector('anforandenummer')?.textContent,
-              anforandetext: element.querySelector('anforandetext')?.textContent,
-              datum: element.querySelector('datum')?.textContent,
-              rubrik: element.querySelector('rubrik')?.textContent,
-              avsnittsrubrik: element.querySelector('avsnittsrubrik')?.textContent,
-              parti: element.querySelector('parti')?.textContent,
-              namn: element.querySelector('namn')?.textContent,
-              talare: element.querySelector('talare')?.textContent,
-            });
+          // Extract anföranden list
+          let anforanden = [];
+          if (parsed.anforandelista?.anforande) {
+            anforanden = Array.isArray(parsed.anforandelista.anforande)
+              ? parsed.anforandelista.anforande
+              : [parsed.anforandelista.anforande];
           }
           
-          // Simulera JSON-struktur
-          const sidor = doc.querySelector('anforandelista')?.getAttribute('sidor');
-          const traffar = doc.querySelector('anforandelista')?.getAttribute('traffar');
-          const nastaSida = doc.querySelector('anforandelista')?.getAttribute('nasta_sida');
+          console.log(`Found ${anforanden.length} anföranden in XML`);
           
+          // Convert to expected structure
           data = {
             anforandelista: {
-              '@sidor': sidor,
-              '@traffar': traffar,
-              '@nasta_sida': nastaSida,
+              '@sidor': parsed.anforandelista?.['@sidor'] || '0',
+              '@traffar': parsed.anforandelista?.['@traffar'] || '0',
+              '@nasta_sida': parsed.anforandelista?.['@nasta_sida'] || null,
               anforande: anforanden
             }
           };
           
-          console.log(`Parsade ${anforanden.length} anföranden från XML`);
+          console.log(`Metadata - Sidor: ${data.anforandelista['@sidor']}, Träffar: ${data.anforandelista['@traffar']}`);
         } catch (err) {
-          console.error('XML-parsing fel:', err);
+          console.error('XML-parsing error:', err);
+          console.error('Error details:', err instanceof Error ? err.message : String(err));
           data = { anforandelista: { anforande: [] } };
           nextPageUrl = null;
         }
@@ -500,19 +491,22 @@ Deno.serve(async (req) => {
           ? data.anforandelista.anforande 
           : [data.anforandelista.anforande];
 
+        console.log(`Processing ${anforanden.length} anföranden from this page`);
+
         for (const anf of anforanden) {
           try {
+            // Map XML fields correctly according to Riksdagen API structure
             const anforandeData: AnforandeData = {
-              anforande_id: anf.anforande_id || anf.dokument_id,
+              anforande_id: anf.anforande_id,
               intressent_id: anf.intressent_id,
-              dok_id: anf.dokument_id || anf.dok_id,
-              debattnamn: anf.debatt || anf.debattnamn,
-              debattsekund: anf.anforandenummer ? parseInt(anf.anforandenummer) : undefined,
-              anftext: anf.anforandetext,
-              anfdatum: anf.datum,
-              avsnittsrubrik: anf.rubrik || anf.avsnittsrubrik,
+              dok_id: anf.dok_id,
+              debattnamn: anf.debattnamn,
+              debattsekund: anf.debattsekund ? parseInt(anf.debattsekund) : undefined,
+              anftext: anf.anftext,
+              anfdatum: anf.anfdatum,
+              avsnittsrubrik: anf.avsnittsrubrik,
               parti: anf.parti,
-              talare: anf.namn || anf.talare,
+              talare: anf.talare,
             };
 
             const { error } = await supabaseClient
@@ -521,15 +515,19 @@ Deno.serve(async (req) => {
 
             if (error) {
               console.error('Fel vid insättning av anförande:', error);
+              console.error('Anförande data:', anforandeData);
               errorsThisPage++;
             } else {
               insertedThisPage++;
             }
           } catch (err) {
             console.error('Fel vid bearbetning av anförande:', err);
+            console.error('Raw anförande object:', anf);
             errorsThisPage++;
           }
         }
+        
+        console.log(`Page complete: ${insertedThisPage} inserted, ${errorsThisPage} errors`);
         
         // Hämta nästa sida
         nextPageUrl = paginate ? data.anforandelista['@nasta_sida'] : null;

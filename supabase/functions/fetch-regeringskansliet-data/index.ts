@@ -29,32 +29,52 @@ Deno.serve(async (req) => {
       Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
     )
 
-    const { dataType, limit = 0 } = await req.json();
+    const { dataType } = await req.json();
 
     console.log(`Hämtar ${dataType} data från g0v.se API...`);
 
-    let apiUrl = '';
-    let tableName = '';
+    const endpointMap: Record<string, { url: string, table: string }> = {
+      'pressmeddelanden': { url: 'https://g0v.se/pressmeddelanden.json', table: 'regeringskansliet_pressmeddelanden' },
+      'propositioner': { url: 'https://g0v.se/rattsliga-dokument/proposition.json', table: 'regeringskansliet_propositioner' },
+      'dokument': { url: 'https://g0v.se/api/items.json', table: 'regeringskansliet_dokument' },
+      'kategorier': { url: 'https://g0v.se/api/codes.json', table: 'regeringskansliet_kategorier' },
+      'departementsserien': { url: 'https://g0v.se/rattsliga-dokument/departementsserien-och-promemorior.json', table: 'regeringskansliet_departementsserien' },
+      'forordningsmotiv': { url: 'https://g0v.se/rattsliga-dokument/forordningsmotiv.json', table: 'regeringskansliet_forordningsmotiv' },
+      'kommittedirektiv': { url: 'https://g0v.se/rattsliga-dokument/kommittedirektiv.json', table: 'regeringskansliet_kommittedirektiv' },
+      'lagradsremiss': { url: 'https://g0v.se/rattsliga-dokument/lagradsremiss.json', table: 'regeringskansliet_lagradsremiss' },
+      'skrivelse': { url: 'https://g0v.se/rattsliga-dokument/skrivelse.json', table: 'regeringskansliet_skrivelse' },
+      'sou': { url: 'https://g0v.se/rattsliga-dokument/statens-offentliga-utredningar.json', table: 'regeringskansliet_sou' },
+      'internationella-overenskommelser': { url: 'https://g0v.se/rattsliga-dokument/sveriges-internationella-overenskommelser.json', table: 'regeringskansliet_internationella_overenskommelser' },
+      'faktapromemoria': { url: 'https://g0v.se/faktapromemoria.json', table: 'regeringskansliet_faktapromemoria' },
+      'informationsmaterial': { url: 'https://g0v.se/informationsmaterial.json', table: 'regeringskansliet_informationsmaterial' },
+      'mr-granskningar': { url: 'https://g0v.se/internationella-mr-granskningar-av-sverige.json', table: 'regeringskansliet_mr_granskningar' },
+      'dagordningar': { url: 'https://g0v.se/kommenterade-dagordningar.json', table: 'regeringskansliet_dagordningar' },
+      'rapporter': { url: 'https://g0v.se/rapporter.json', table: 'regeringskansliet_rapporter' },
+      'remisser': { url: 'https://g0v.se/remisser.json', table: 'regeringskansliet_remisser' },
+      'regeringsuppdrag': { url: 'https://g0v.se/regeringsuppdrag.json', table: 'regeringskansliet_regeringsuppdrag' },
+      'regeringsarenden': { url: 'https://g0v.se/regeringsarenden.json', table: 'regeringskansliet_regeringsarenden' },
+      'sakrad': { url: 'https://g0v.se/sakrad.json', table: 'regeringskansliet_sakrad' },
+      'bistands-strategier': { url: 'https://g0v.se/strategier-for-internationellt-bistand.json', table: 'regeringskansliet_bistands_strategier' },
+      'overenskommelser-avtal': { url: 'https://g0v.se/overenskommelser-och-avtal.json', table: 'regeringskansliet_overenskommelser_avtal' },
+      'arendeforteckningar': { url: 'https://g0v.se/arendeforteckningar.json', table: 'regeringskansliet_arendeforteckningar' },
+      'artiklar': { url: 'https://g0v.se/artiklar.json', table: 'regeringskansliet_artiklar' },
+      'debattartiklar': { url: 'https://g0v.se/debattartiklar.json', table: 'regeringskansliet_debattartiklar' },
+      'tal': { url: 'https://g0v.se/tal.json', table: 'regeringskansliet_tal' },
+      'ud-avrader': { url: 'https://g0v.se/ud-avrader.json', table: 'regeringskansliet_ud_avrader' },
+      'uttalanden': { url: 'https://g0v.se/uttalanden.json', table: 'regeringskansliet_uttalanden' },
+    };
 
-    // Välj rätt endpoint baserat på datatyp
-    if (dataType === 'pressmeddelanden') {
-      apiUrl = 'https://g0v.se/pressmeddelanden.json';
-      tableName = 'regeringskansliet_pressmeddelanden';
-    } else if (dataType === 'propositioner') {
-      apiUrl = 'https://g0v.se/rattsliga-dokument/proposition.json';
-      tableName = 'regeringskansliet_propositioner';
-    } else if (dataType === 'dokument') {
-      apiUrl = 'https://g0v.se/api/items.json';
-      tableName = 'regeringskansliet_dokument';
-    } else if (dataType === 'kategorier') {
-      apiUrl = 'https://g0v.se/api/codes.json';
-      tableName = 'regeringskansliet_kategorier';
-    } else {
+    const endpoint = endpointMap[dataType];
+    
+    if (!endpoint) {
       return new Response(
         JSON.stringify({ success: false, message: 'Okänd datatyp' }),
         { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 400 }
       );
     }
+
+    const apiUrl = endpoint.url;
+    const tableName = endpoint.table;
 
     console.log(`Anropar: ${apiUrl}`);
 
@@ -72,7 +92,7 @@ Deno.serve(async (req) => {
     let errors = 0;
 
     if (dataType === 'pressmeddelanden' && Array.isArray(data)) {
-      const items = limit > 0 ? data.slice(0, limit) : data;
+      const items = data;
       
       for (const item of items) {
         try {
@@ -101,7 +121,7 @@ Deno.serve(async (req) => {
         }
       }
     } else if (dataType === 'propositioner' && Array.isArray(data)) {
-      const items = limit > 0 ? data.slice(0, limit) : data;
+      const items = data;
       
       for (const item of items) {
         try {
@@ -155,9 +175,41 @@ Deno.serve(async (req) => {
         }
       }
     } else if (dataType === 'dokument' && Array.isArray(data)) {
-      const items = limit > 0 ? data.slice(0, limit) : data;
+      const items = data;
       
       for (const item of items) {
+        try {
+          const docData = {
+            document_id: item.id || item.url,
+            titel: item.title,
+            publicerad_datum: item.published,
+            uppdaterad_datum: item.updated,
+            typ: item.type,
+            kategorier: item.categories,
+            avsandare: item.sender,
+            beteckningsnummer: item.identifier,
+            url: item.url,
+            markdown_url: item.url ? item.url.replace('regeringen.se', 'g0v.se').replace(/\/$/, '.md') : null,
+          };
+
+          const { error } = await supabaseClient
+            .from(tableName)
+            .upsert(docData, { onConflict: 'document_id' });
+
+          if (error) {
+            console.error('Fel vid insättning:', error);
+            errors++;
+          } else {
+            insertedCount++;
+          }
+        } catch (err) {
+          console.error('Fel vid bearbetning:', err);
+          errors++;
+        }
+      }
+    } else if (Array.isArray(data)) {
+      // Hantera alla andra dokumenttyper med standardformat
+      for (const item of data) {
         try {
           const docData = {
             document_id: item.id || item.url,

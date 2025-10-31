@@ -14,7 +14,7 @@ const Index = () => {
         </header>
 
         <div className="grid md:grid-cols-2 gap-6 md:gap-8 max-w-5xl mx-auto mb-16">
-          <InstitutionCard title="Riksdagen" description="Utforska Sveriges riksdag med AI. Få insikter om propositioner, debatter och beslutsprocesser." href="https://riksdagen.ai" image={riksdagenLogo} />
+          <InstitutionCard title="Riksdagen" description="Utforska Sveriges riksdag med AI. Få insikter om propositioner, debatter och beslutsprocesser." href="/riksdagen" image={riksdagenLogo} />
           
           <InstitutionCard title="Regeringskansliet" description="Upptäck regeringens arbete och organisation. AI-driven information om departement och policy." href="https://regeringskansliet.ai" image={regeringskanslientLogo} />
         </div>

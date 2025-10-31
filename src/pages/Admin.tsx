@@ -4,15 +4,21 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Button } from "@/components/ui/button";
 import { Shield, Database, Download, Settings, ArrowLeft, BarChart3 } from "lucide-react";
 import { useIsAdmin } from "@/hooks/useIsAdmin";
-import { DataProcessControl } from "@/components/admin/DataProcessControl";
-import { FileQueueControl } from "@/components/admin/FileQueueControl";
-import { AdminSetup } from "@/components/admin/AdminSetup";
-import { SyncProgress } from "@/components/admin/SyncProgress";
-import { SystemHealth } from "@/components/admin/SystemHealth";
-import { Skeleton } from "@/components/ui/skeleton";
-import RiksdagenApiInfo from "@/components/admin/RiksdagenApiInfo";
+import DataProcessControl from "@/components/admin/DataProcessControl";
+import FileQueueManager from "@/components/FileQueueManager";
+import SystemHealth from "@/components/admin/SystemHealth";
+import SyncProgress from "@/components/admin/SyncProgress";
 import RiksdagenDataFetchConfig from "@/components/admin/RiksdagenDataFetchConfig";
-import { DatabaseStats } from "@/components/admin/DatabaseStats";
+import DatabaseStats from "@/components/admin/DatabaseStats";
+import AdminSetup from "@/components/admin/AdminSetup";
+import StorageBrowser from "@/components/admin/StorageBrowser";
+import ActivityStream from "@/components/admin/ActivityStream";
+import AdminNotifications from "@/components/admin/AdminNotifications";
+import StorageQuota from "@/components/admin/StorageQuota";
+import DataFetchTimeline from "@/components/admin/DataFetchTimeline";
+import FileIntegrityCheck from "@/components/admin/FileIntegrityCheck";
+import BatchOperations from "@/components/admin/BatchOperations";
+import { Skeleton } from "@/components/ui/skeleton";
 
 const Admin = () => {
   const { isAdmin, isLoading } = useIsAdmin();
@@ -78,8 +84,20 @@ const Admin = () => {
             </TabsTrigger>
           </TabsList>
 
-          <TabsContent value="overview" className="space-y-4">
-            <SystemHealth />
+          <TabsContent value="overview" className="space-y-6">
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+              <SystemHealth />
+              <StorageQuota />
+            </div>
+            <AdminNotifications />
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+              <ActivityStream />
+              <div className="space-y-6">
+                <FileIntegrityCheck />
+                <BatchOperations />
+              </div>
+            </div>
+            <DataFetchTimeline />
             <DatabaseStats />
           </TabsContent>
 
@@ -115,12 +133,12 @@ const Admin = () => {
             </Card>
           </TabsContent>
 
-          <TabsContent value="files" className="space-y-4">
-            <FileQueueControl />
+          <TabsContent value="files" className="space-y-6">
+            <FileQueueManager />
+            <StorageBrowser />
           </TabsContent>
 
-          <TabsContent value="settings" className="space-y-4">
-            <SystemHealth />
+          <TabsContent value="settings" className="space-y-6">
             <AdminSetup />
           </TabsContent>
         </Tabs>

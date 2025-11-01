@@ -118,7 +118,7 @@ export const GenericDocumentPage = ({
   const filteredDocuments = useMemo(() => {
     if (!documents) return [];
     if (selectedCategories.length === 0) return documents;
-    
+
     return documents.filter((doc: any) => {
       if (!doc.kategorier || !Array.isArray(doc.kategorier)) return false;
       return selectedCategories.some((cat) => doc.kategorier.includes(cat));
@@ -167,14 +167,16 @@ export const GenericDocumentPage = ({
   const renderLocalFiles = (localFiles: any) => {
     if (!localFiles) return null;
 
+    // Handle empty arrays
     const files = Array.isArray(localFiles) ? localFiles : [localFiles];
-    
+    if (files.length === 0) return null;
+
     return (
       <div className="flex flex-wrap gap-2 mt-2">
         {files.map((file: any, idx: number) => {
           const fileName = file.name || file.filename || `Fil ${idx + 1}`;
           const fileUrl = file.url || file.local_url || file;
-          
+
           if (typeof fileUrl === 'string' && fileUrl) {
             return (
               <a
@@ -195,6 +197,13 @@ export const GenericDocumentPage = ({
     );
   };
 
+  // Helper to check if local files exist and have data
+  const hasLocalFiles = (localFiles: any) => {
+    if (!localFiles) return false;
+    if (Array.isArray(localFiles)) return localFiles.length > 0;
+    return true;
+  };
+
   return (
     <div className="min-h-screen bg-background">
       <div className="container mx-auto px-4 py-6 md:py-8 max-w-7xl">
@@ -205,7 +214,7 @@ export const GenericDocumentPage = ({
               Tillbaka
             </Button>
           </Link>
-          
+
           <h1 className="text-3xl md:text-4xl font-serif font-bold mb-4 text-foreground">
             {title}
           </h1>
@@ -332,10 +341,10 @@ export const GenericDocumentPage = ({
                   )}
 
                   {/* Show files from Supabase Storage if available */}
-                  {(doc.local_files || doc.local_bilagor) && renderLocalFiles(doc.local_files || doc.local_bilagor)}
+                  {hasLocalFiles(doc.local_files) && renderLocalFiles(doc.local_files)}
 
                   {/* If no local files, show external link button */}
-                  {!doc.local_files && !doc.local_bilagor && getAbsoluteUrl(doc.url) && (
+                  {!hasLocalFiles(doc.local_files) && getAbsoluteUrl(doc.url) && (
                     <div className="flex flex-wrap gap-2 mt-2">
                       <a href={getAbsoluteUrl(doc.url)!} target="_blank" rel="noopener noreferrer">
                         <Button
@@ -364,7 +373,7 @@ export const GenericDocumentPage = ({
                       className={currentPage === 1 ? "pointer-events-none opacity-50" : "cursor-pointer"}
                     />
                   </PaginationItem>
-                  
+
                   {Array.from({ length: totalPages }, (_, i) => i + 1)
                     .filter((page) => {
                       if (totalPages <= 7) return true;

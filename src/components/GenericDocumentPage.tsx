@@ -9,7 +9,6 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Badge } from "@/components/ui/badge";
 import { Search, FileText, Calendar, User, Download, ArrowLeft, FileDown, ChevronLeft, ChevronRight } from "lucide-react";
 import EmptyState from "@/components/EmptyState";
-import ProgressTracker from "@/components/ProgressTracker";
 import { FavoriteButton } from "@/components/FavoriteButton";
 import { AdvancedFilters } from "@/components/AdvancedFilters";
 import { useDocumentAnalytics } from "@/hooks/useDocumentAnalytics";
@@ -55,24 +54,6 @@ export const GenericDocumentPage = ({
   const [selectedCategories, setSelectedCategories] = useState<string[]>([]);
   const itemsPerPage = PAGINATION.ITEMS_PER_PAGE;
   const { trackView } = useDocumentAnalytics();
-
-  // Helper function to convert relative URLs to absolute URLs
-  const getAbsoluteUrl = (url: string | null | undefined): string | null => {
-    if (!url) return null;
-
-    // If URL already starts with http:// or https://, return as-is
-    if (url.startsWith('http://') || url.startsWith('https://')) {
-      return url;
-    }
-
-    // If URL starts with /, prepend regeringen.se domain
-    if (url.startsWith('/')) {
-      return `https://www.regeringen.se${url}`;
-    }
-
-    // Otherwise return the URL as-is
-    return url;
-  };
 
   // Debounce search query to avoid excessive API calls
   const debouncedSearchQuery = useDebounce(searchQuery, SEARCH.DEBOUNCE_DELAY);
@@ -212,8 +193,6 @@ export const GenericDocumentPage = ({
           </h1>
           <p className="text-muted-foreground text-lg mb-6">{description}</p>
 
-          <ProgressTracker source={source} />
-
           <div className="flex flex-col md:flex-row gap-3 md:gap-4 items-stretch md:items-center mb-6">
             <div className="relative flex-1 min-w-0">
               <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
@@ -333,28 +312,6 @@ export const GenericDocumentPage = ({
                       {doc.innehall}
                     </p>
                   )}
-                  <div className="flex flex-wrap gap-2">
-                    {getAbsoluteUrl(doc.url) && (
-                      <a href={getAbsoluteUrl(doc.url)!} target="_blank" rel="noopener noreferrer">
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          onClick={() => trackView({ tableName, documentId: doc.document_id })}
-                        >
-                          <FileText className="h-4 w-4 mr-2" />
-                          Visa original
-                        </Button>
-                      </a>
-                    )}
-                    {getAbsoluteUrl(doc.markdown_url) && (
-                      <a href={getAbsoluteUrl(doc.markdown_url)!} target="_blank" rel="noopener noreferrer">
-                        <Button variant="outline" size="sm">
-                          <FileText className="h-4 w-4 mr-2" />
-                          Markdown
-                        </Button>
-                      </a>
-                    )}
-                  </div>
                   {(doc.local_files || doc.local_bilagor) && renderLocalFiles(doc.local_files || doc.local_bilagor)}
                 </CardContent>
               </Card>

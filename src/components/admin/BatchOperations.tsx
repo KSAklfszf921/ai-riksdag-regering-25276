@@ -69,11 +69,10 @@ const BatchOperations = () => {
     });
     
     if (!validation.success) {
-      const error = validation.error;
-      setValidationError(error);
+      setValidationError(validation.error);
       toast({
         title: "Valideringsfel",
-        description: error,
+        description: validation.error,
         variant: "destructive",
       });
       return;

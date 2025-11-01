@@ -1,0 +1,7 @@
+{
+  "permissions": {
+    "execute_commands": true,
+    "local_disk_access": true,
+    "web_browser_access": true
+  }
+}

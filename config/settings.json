@@ -1,0 +1,14 @@
+{
+  "language": "sv",
+  "verbosity": "normal",
+  "project_preferences": {
+    "Riksdag-Regering.AI": {
+      "default_branch": "main",
+      "auto_save": true
+    }
+  },
+  "github": {
+    "username": "gemini-cli-agent",
+    "default_repo_visibility": "private"
+  }
+}

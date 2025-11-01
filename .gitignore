@@ -1,0 +1,2 @@
+# Ignorera lokala konfigurationsfiler och känslig information
+.mcp_token

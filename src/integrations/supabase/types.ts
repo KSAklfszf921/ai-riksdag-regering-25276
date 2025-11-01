@@ -1943,6 +1943,27 @@ export type Database = {
         }
         Relationships: []
       }
+      storage_statistics: {
+        Row: {
+          bucket_id: string
+          file_count: number
+          last_updated: string
+          total_size_bytes: number
+        }
+        Insert: {
+          bucket_id: string
+          file_count?: number
+          last_updated?: string
+          total_size_bytes?: number
+        }
+        Update: {
+          bucket_id?: string
+          file_count?: number
+          last_updated?: string
+          total_size_bytes?: number
+        }
+        Relationships: []
+      }
       user_roles: {
         Row: {
           created_at: string | null
@@ -1966,15 +1987,7 @@ export type Database = {
       }
     }
     Views: {
-      storage_statistics: {
-        Row: {
-          bucket_name: string | null
-          file_count: number | null
-          last_updated: string | null
-          total_size_bytes: number | null
-        }
-        Relationships: []
-      }
+      [_ in never]: never
     }
     Functions: {
       get_table_sizes: {

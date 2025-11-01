@@ -13,8 +13,10 @@ import ProgressTracker from "@/components/ProgressTracker";
 import { FavoriteButton } from "@/components/FavoriteButton";
 import { AdvancedFilters } from "@/components/AdvancedFilters";
 import { useDocumentAnalytics } from "@/hooks/useDocumentAnalytics";
+import { useDebounce } from "@/hooks/useDebounce";
 import { exportToCSV, exportToJSON } from "@/lib/exportUtils";
 import { format } from "date-fns";
+import { PAGINATION, SEARCH } from "@/config/constants";
 import {
   Pagination,
   PaginationContent,
@@ -51,16 +53,19 @@ export const GenericDocumentPage = ({
   const [dateFrom, setDateFrom] = useState("");
   const [dateTo, setDateTo] = useState("");
   const [selectedCategories, setSelectedCategories] = useState<string[]>([]);
-  const itemsPerPage = 20;
+  const itemsPerPage = PAGINATION.ITEMS_PER_PAGE;
   const { trackView } = useDocumentAnalytics();
 
+  // Debounce search query to avoid excessive API calls
+  const debouncedSearchQuery = useDebounce(searchQuery, SEARCH.DEBOUNCE_DELAY);
+
   const { data: documents, isLoading } = useQuery({
-    queryKey: [tableName, searchQuery, sortBy, dateFrom, dateTo, selectedCategories],
+    queryKey: [tableName, debouncedSearchQuery, sortBy, dateFrom, dateTo, selectedCategories],
     queryFn: async () => {
       let query = supabase.from(tableName as any).select("*");
 
-      if (searchQuery) {
-        query = query.or(`titel.ilike.%${searchQuery}%,document_id.ilike.%${searchQuery}%,beteckningsnummer.ilike.%${searchQuery}%`);
+      if (debouncedSearchQuery && debouncedSearchQuery.length >= SEARCH.MIN_SEARCH_LENGTH) {
+        query = query.or(`titel.ilike.%${debouncedSearchQuery}%,document_id.ilike.%${debouncedSearchQuery}%,beteckningsnummer.ilike.%${debouncedSearchQuery}%`);
       }
 
       if (dateFrom) {

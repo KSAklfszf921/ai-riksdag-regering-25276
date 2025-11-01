@@ -2,7 +2,7 @@ import { Link, Navigate } from "react-router-dom";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Shield, Database, Download, Settings, ArrowLeft, BarChart3 } from "lucide-react";
+import { Shield, Database, Download, Settings, ArrowLeft, BarChart3, Zap } from "lucide-react";
 import { useIsAdmin } from "@/hooks/useIsAdmin";
 import { DataProcessControl } from "@/components/admin/DataProcessControl";
 import FileQueueManager from "@/components/FileQueueManager";
@@ -24,6 +24,7 @@ import { DashboardQuickStats } from "@/components/admin/DashboardQuickStats";
 import { AdminActionCenter } from "@/components/admin/AdminActionCenter";
 import { StorageCleanup } from "@/components/admin/StorageCleanup";
 import FileQueueManagerImproved from "@/components/admin/FileQueueManagerImproved";
+import { AutomaticFileProcessor } from "@/components/admin/AutomaticFileProcessor";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { ChevronDown, AlertCircle } from "lucide-react";
 
@@ -68,7 +69,7 @@ const Admin = () => {
         </div>
 
         <Tabs defaultValue="overview" className="space-y-6">
-          <TabsList className="grid w-full grid-cols-5">
+          <TabsList className="grid w-full grid-cols-6">
             <TabsTrigger value="overview">
               <BarChart3 className="h-4 w-4 mr-2" />
               Översikt
@@ -84,6 +85,10 @@ const Admin = () => {
             <TabsTrigger value="files">
               <Download className="h-4 w-4 mr-2" />
               Filer & Storage
+            </TabsTrigger>
+            <TabsTrigger value="auto-process">
+              <Zap className="h-4 w-4 mr-2" />
+              Auto-Process
             </TabsTrigger>
             <TabsTrigger value="settings">
               <Settings className="h-4 w-4 mr-2" />
@@ -173,6 +178,10 @@ const Admin = () => {
             </div>
             <StorageBrowserImproved />
             <StorageCleanup />
+          </TabsContent>
+
+          <TabsContent value="auto-process" className="space-y-6">
+            <AutomaticFileProcessor />
           </TabsContent>
 
           <TabsContent value="settings" className="space-y-6">

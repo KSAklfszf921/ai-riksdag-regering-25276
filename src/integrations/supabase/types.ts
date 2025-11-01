@@ -221,6 +221,45 @@ export type Database = {
         }
         Relationships: []
       }
+      file_queue_control: {
+        Row: {
+          created_at: string
+          current_batch: number
+          id: string
+          is_running: boolean
+          last_run_at: string | null
+          started_at: string | null
+          started_by: string | null
+          stopped_at: string | null
+          total_processed: number
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          current_batch?: number
+          id?: string
+          is_running?: boolean
+          last_run_at?: string | null
+          started_at?: string | null
+          started_by?: string | null
+          stopped_at?: string | null
+          total_processed?: number
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          current_batch?: number
+          id?: string
+          is_running?: boolean
+          last_run_at?: string | null
+          started_at?: string | null
+          started_by?: string | null
+          stopped_at?: string | null
+          total_processed?: number
+          updated_at?: string
+        }
+        Relationships: []
+      }
       profiles: {
         Row: {
           auth_user_id: string
@@ -2031,6 +2070,7 @@ export type Database = {
         Returns: undefined
       }
       refresh_storage_statistics: { Args: never; Returns: undefined }
+      reset_stuck_auto_process: { Args: never; Returns: undefined }
     }
     Enums: {
       app_role: "admin" | "moderator" | "user"

@@ -62,7 +62,7 @@ Deno.serve(async (req) => {
       .from('file_download_queue')
       .select('*')
       .eq('status', 'pending')
-      .limit(50);
+      .limit(100); // Increased from 50 to 100 for faster auto-processing
 
     let processed = 0;
     let failed = 0;

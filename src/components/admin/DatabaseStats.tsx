@@ -6,13 +6,13 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { formatDistanceToNow } from "date-fns";
 import { sv } from "date-fns/locale";
 import { Progress } from "@/components/ui/progress";
-
 export const DatabaseStats = () => {
-  const { data: stats, isLoading } = useDatabaseStats();
-
+  const {
+    data: stats,
+    isLoading
+  } = useDatabaseStats();
   if (isLoading) {
-    return (
-      <Card>
+    return <Card>
         <CardHeader>
           <CardTitle>Databasöversikt</CardTitle>
         </CardHeader>
@@ -20,24 +20,33 @@ export const DatabaseStats = () => {
           <Skeleton className="h-20 w-full" />
           <Skeleton className="h-40 w-full" />
         </CardContent>
-      </Card>
-    );
+      </Card>;
   }
 
   // Hitta de 5 största tabellerna
   const topTables = stats?.tables.slice(0, 5) || [];
-  
+
   // Beräkna färg baserat på senaste uppdatering
   const getUpdateStatus = (lastUpdated: string) => {
     const hoursSinceUpdate = (Date.now() - new Date(lastUpdated).getTime()) / (1000 * 60 * 60);
-    if (hoursSinceUpdate < 1) return { variant: "default" as const, label: "Nyligen uppdaterad" };
-    if (hoursSinceUpdate < 24) return { variant: "secondary" as const, label: "Uppdaterad idag" };
-    if (hoursSinceUpdate < 168) return { variant: "outline" as const, label: "Uppdaterad denna vecka" };
-    return { variant: "destructive" as const, label: "Gammal data" };
+    if (hoursSinceUpdate < 1) return {
+      variant: "default" as const,
+      label: "Nyligen uppdaterad"
+    };
+    if (hoursSinceUpdate < 24) return {
+      variant: "secondary" as const,
+      label: "Uppdaterad idag"
+    };
+    if (hoursSinceUpdate < 168) return {
+      variant: "outline" as const,
+      label: "Uppdaterad denna vecka"
+    };
+    return {
+      variant: "destructive" as const,
+      label: "Gammal data"
+    };
   };
-
-  return (
-    <div className="space-y-4">
+  return <div className="space-y-4">
       {/* Snabbstatistik */}
       <div className="grid gap-4 md:grid-cols-4">
         <Card>
@@ -101,13 +110,11 @@ export const DatabaseStats = () => {
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
-          {topTables.map((table) => {
-            const updateStatus = getUpdateStatus(table.last_updated);
-            const maxSize = stats?.tables[0]?.size_bytes || 1;
-            const percentage = (table.size_bytes / maxSize) * 100;
-            
-            return (
-              <div key={table.table_name} className="space-y-2">
+          {topTables.map(table => {
+          const updateStatus = getUpdateStatus(table.last_updated);
+          const maxSize = stats?.tables[0]?.size_bytes || 1;
+          const percentage = table.size_bytes / maxSize * 100;
+          return <div key={table.table_name} className="space-y-2">
                 <div className="flex items-center justify-between">
                   <div className="flex-1">
                     <div className="flex items-center gap-2">
@@ -126,35 +133,25 @@ export const DatabaseStats = () => {
                       <p className="text-xs text-muted-foreground flex items-center gap-1">
                         <Clock className="h-3 w-3" />
                         {formatDistanceToNow(new Date(table.last_updated), {
-                          addSuffix: true,
-                          locale: sv,
-                        })}
+                      addSuffix: true,
+                      locale: sv
+                    })}
                       </p>
                     </div>
                   </div>
                 </div>
                 <Progress value={percentage} className="h-2" />
-              </div>
-            );
-          })}
+              </div>;
+        })}
         </CardContent>
       </Card>
 
       {/* Storage buckets */}
       <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <HardDrive className="h-5 w-5" />
-            Storage-statistik
-          </CardTitle>
-          <CardDescription>
-            Översikt över fillagring i Supabase Storage
-          </CardDescription>
-        </CardHeader>
+        
         <CardContent>
           <div className="space-y-3">
-            {stats?.buckets.map((bucket) => (
-              <div key={bucket.name} className="flex items-center justify-between p-3 border rounded bg-card">
+            {stats?.buckets.map(bucket => <div key={bucket.name} className="flex items-center justify-between p-3 border rounded bg-card">
                 <div className="flex items-center gap-3">
                   <HardDrive className="h-4 w-4 text-muted-foreground" />
                   <div>
@@ -167,11 +164,9 @@ export const DatabaseStats = () => {
                 <Badge variant="outline">
                   ~{bucket.total_size_mb.toFixed(1)} MB
                 </Badge>
-              </div>
-            ))}
+              </div>)}
           </div>
         </CardContent>
       </Card>
-    </div>
-  );
+    </div>;
 };

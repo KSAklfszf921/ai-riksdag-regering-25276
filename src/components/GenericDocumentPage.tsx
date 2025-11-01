@@ -14,6 +14,7 @@ import { AdvancedFilters } from "@/components/AdvancedFilters";
 import { useDocumentAnalytics } from "@/hooks/useDocumentAnalytics";
 import { useDebounce } from "@/hooks/useDebounce";
 import { exportToCSV, exportToJSON } from "@/lib/exportUtils";
+import { getAbsoluteUrl } from "@/utils/urlHelpers";
 import { format } from "date-fns";
 import { PAGINATION, SEARCH } from "@/config/constants";
 import {
@@ -54,24 +55,6 @@ export const GenericDocumentPage = ({
   const [selectedCategories, setSelectedCategories] = useState<string[]>([]);
   const itemsPerPage = PAGINATION.ITEMS_PER_PAGE;
   const { trackView } = useDocumentAnalytics();
-
-  // Helper function to convert relative URLs to absolute URLs
-  const getAbsoluteUrl = (url: string | null | undefined): string | null => {
-    if (!url) return null;
-
-    // If URL already starts with http:// or https://, return as-is
-    if (url.startsWith('http://') || url.startsWith('https://')) {
-      return url;
-    }
-
-    // If URL starts with /, prepend regeringen.se domain
-    if (url.startsWith('/')) {
-      return `https://www.regeringen.se${url}`;
-    }
-
-    // Otherwise return the URL as-is
-    return url;
-  };
 
   // Debounce search query to avoid excessive API calls
   const debouncedSearchQuery = useDebounce(searchQuery, SEARCH.DEBOUNCE_DELAY);

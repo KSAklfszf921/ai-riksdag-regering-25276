@@ -5,16 +5,18 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Label } from "@/components/ui/label";
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import { Loader2 } from "lucide-react";
+import { Loader2, AlertCircle } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { logActivity } from "@/hooks/useActivityStream";
+import { batchOperationSchema, validateInput } from "@/lib/validationSchemas";
 
 const BatchOperations = () => {
   const [selectedTable, setSelectedTable] = useState('regeringskansliet_sakrad');
   const [selectedOperation, setSelectedOperation] = useState<string>('');
   const [isProcessing, setIsProcessing] = useState(false);
   const [estimatedCount, setEstimatedCount] = useState<number | null>(null);
+  const [validationError, setValidationError] = useState<string | null>(null);
   const { toast } = useToast();
 
   const tables = [
@@ -60,15 +62,24 @@ const BatchOperations = () => {
   };
 
   const runBatchOperation = async () => {
-    if (!selectedOperation) {
+    // Validera input
+    const validation = validateInput(batchOperationSchema, {
+      selectedTable,
+      selectedOperation
+    });
+    
+    if (!validation.success) {
+      const error = validation.error;
+      setValidationError(error);
       toast({
-        title: "Ingen operation vald",
-        description: "Välj en operation först",
+        title: "Valideringsfel",
+        description: error,
         variant: "destructive",
       });
       return;
     }
 
+    setValidationError(null);
     setIsProcessing(true);
 
     try {
@@ -134,6 +145,13 @@ const BatchOperations = () => {
       </CardHeader>
       <CardContent>
         <div className="space-y-4">
+          {validationError && (
+            <Alert variant="destructive">
+              <AlertCircle className="h-4 w-4" />
+              <AlertDescription>{validationError}</AlertDescription>
+            </Alert>
+          )}
+          
           <div>
             <Label>Välj tabell</Label>
             <Select value={selectedTable} onValueChange={setSelectedTable}>

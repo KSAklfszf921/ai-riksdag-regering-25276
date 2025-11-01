@@ -6,8 +6,10 @@ import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
-import { Loader2, Play, Info } from "lucide-react";
+import { Loader2, Play, Info, AlertCircle } from "lucide-react";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
+import { Alert, AlertDescription } from "@/components/ui/alert";
+import { riksdagenFetchSchema, validateInput, type RiksdagenFetchInput } from "@/lib/validationSchemas";
 
 interface FetchConfig {
   dataType: string;
@@ -39,6 +41,7 @@ const RIKSMOTE_OPTIONS = [
 export default function RiksdagenDataFetchConfig() {
   const { toast } = useToast();
   const [loading, setLoading] = useState<string | null>(null);
+  const [validationError, setValidationError] = useState<string | null>(null);
   const [config, setConfig] = useState<FetchConfig>({
     dataType: "anforanden",
     sz: "200"
@@ -47,6 +50,20 @@ export default function RiksdagenDataFetchConfig() {
   const fetchData = async () => {
     if (!config.dataType) return;
     
+    // Validera input med Zod
+    const validation = validateInput(riksdagenFetchSchema, config);
+    if (!validation.success) {
+      const error = validation.error;
+      setValidationError(error);
+      toast({
+        title: "Valideringsfel",
+        description: error,
+        variant: "destructive",
+      });
+      return;
+    }
+    
+    setValidationError(null);
     setLoading(config.dataType);
     
     try {
@@ -226,6 +243,14 @@ export default function RiksdagenDataFetchConfig() {
             </AccordionContent>
           </AccordionItem>
         </Accordion>
+
+        {/* Valideringsfel */}
+        {validationError && (
+          <Alert variant="destructive">
+            <AlertCircle className="h-4 w-4" />
+            <AlertDescription>{validationError}</AlertDescription>
+          </Alert>
+        )}
 
         {/* Information om vald konfiguration */}
         <div className="rounded-lg bg-muted p-4 space-y-2">

@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Badge } from "@/components/ui/badge";
-import { Search, FileText, Calendar, User, Download, ArrowLeft, FileDown, ChevronLeft, ChevronRight } from "lucide-react";
+import { Search, FileText, Calendar, User, Download, ArrowLeft, FileDown, ChevronLeft, ChevronRight, ExternalLink } from "lucide-react";
 import EmptyState from "@/components/EmptyState";
 import { FavoriteButton } from "@/components/FavoriteButton";
 import { AdvancedFilters } from "@/components/AdvancedFilters";
@@ -54,6 +54,24 @@ export const GenericDocumentPage = ({
   const [selectedCategories, setSelectedCategories] = useState<string[]>([]);
   const itemsPerPage = PAGINATION.ITEMS_PER_PAGE;
   const { trackView } = useDocumentAnalytics();
+
+  // Helper function to convert relative URLs to absolute URLs
+  const getAbsoluteUrl = (url: string | null | undefined): string | null => {
+    if (!url) return null;
+
+    // If URL already starts with http:// or https://, return as-is
+    if (url.startsWith('http://') || url.startsWith('https://')) {
+      return url;
+    }
+
+    // If URL starts with /, prepend regeringen.se domain
+    if (url.startsWith('/')) {
+      return `https://www.regeringen.se${url}`;
+    }
+
+    // Otherwise return the URL as-is
+    return url;
+  };
 
   // Debounce search query to avoid excessive API calls
   const debouncedSearchQuery = useDebounce(searchQuery, SEARCH.DEBOUNCE_DELAY);
@@ -312,7 +330,25 @@ export const GenericDocumentPage = ({
                       {doc.innehall}
                     </p>
                   )}
+
+                  {/* Show files from Supabase Storage if available */}
                   {(doc.local_files || doc.local_bilagor) && renderLocalFiles(doc.local_files || doc.local_bilagor)}
+
+                  {/* If no local files, show external link button */}
+                  {!doc.local_files && !doc.local_bilagor && getAbsoluteUrl(doc.url) && (
+                    <div className="flex flex-wrap gap-2 mt-2">
+                      <a href={getAbsoluteUrl(doc.url)!} target="_blank" rel="noopener noreferrer">
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => trackView({ tableName, documentId: doc.document_id })}
+                        >
+                          <ExternalLink className="h-4 w-4 mr-2" />
+                          Öppna externt
+                        </Button>
+                      </a>
+                    </div>
+                  )}
                 </CardContent>
               </Card>
             ))}

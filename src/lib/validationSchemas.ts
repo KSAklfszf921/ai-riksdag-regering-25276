@@ -168,24 +168,32 @@ export type StorageCleanupInput = z.infer<typeof storageCleanupSchema>;
 // ============================================================
 
 /**
+ * Validation result type with proper discriminated union
+ * This ensures TypeScript can correctly narrow types
+ */
+export type ValidationResult<T> = 
+  | { success: true; data: T; error?: never }
+  | { success: false; error: string; data?: never };
+
+/**
  * Validerar input och returnerar typade data eller error
  */
 export function validateInput<T>(
   schema: z.ZodSchema<T>,
   data: unknown
-): { success: true; data: T } | { success: false; error: string } {
+): ValidationResult<T> {
   try {
     const validated = schema.parse(data);
-    return { success: true, data: validated } as const;
+    return { success: true, data: validated };
   } catch (error) {
     if (error instanceof z.ZodError) {
       const firstError = error.errors[0];
       return { 
-        success: false as const, 
+        success: false, 
         error: `${firstError.path.join('.')}: ${firstError.message}` 
       };
     }
-    return { success: false as const, error: "Valideringsfel" };
+    return { success: false, error: "Valideringsfel" };
   }
 }
 
